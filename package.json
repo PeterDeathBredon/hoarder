@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --config webpack.dev.js --open",
+    "start": "webpack-dev-server --host 192.168.178.31 --config webpack.dev.js --open",
     "build": "webpack --config webpack.prod.js"
   },
   "keywords": [],
@@ -33,7 +33,9 @@
     "webpack-merge": "^5.1.4"
   },
   "dependencies": {
+    "@material/mwc-checkbox": "^0.18.0",
     "jquery": "^3.5.1",
-    "lit-element": "^2.4.0"
+    "lit-element": "^2.4.0",
+    "wired-checkbox": "^2.1.0"
   }
 }
