@@ -1,4 +1,8 @@
-# dizzyturtle
-Spinning Turtle lab project
+# Hoarder
+A shopping list and todo list app 
 
-This is just a lab project to learn using lit-element and establishing a webpack toolchain that makes sense.
+- using lit-element. 
+- It is supposed to use pouchdb/couchdb and 
+- follows an offline first approach - in fact it is supposed to be used
+offline rather than online. 
+
