@@ -1,29 +1,60 @@
-import { html, LitElement, customElement } from 'lit-element';
-import '@material/mwc-checkbox';
-import 'wired-checkbox';
+import {customElement, html, LitElement} from 'lit-element';
 // @ts-ignore
 import appStyle from './component_app.sass';
-
-console.log(appStyle);
+// @ts-ignore
+import {ToDo} from './structures/todo.ts';
+import './todolist.ts'
 
 @customElement('hoarder-app')
 class App extends LitElement {
+    todos: any[];
 
+    constructor() {
+        super();
+        this.todos = [new ToDo("Gummy Stars"), new ToDo("Squishy Fish")];
+    }
+
+    static get properties() {
+        return {
+            todos: {type: Array}
+        }
+    }
 
     static get styles() {
         // return appStyle;
         return appStyle
     }
 
+    _addTodo() {
+        const input = <HTMLInputElement>this.shadowRoot.getElementById('addTodo');
+        const text = input.value;
+        input.value = "";
+        this.todos = [...this.todos, new ToDo(text)];
+    }
+
+    _removeTodo(e: CustomEvent) {
+        const todoToDel = e.detail;
+        this.todos = this.todos.filter(todo => todo !== todoToDel);
+    }
+
+    _changeTodoFinished(e: CustomEvent) {
+        const todo = e.detail.todo;
+        const finished = e.detail.finished;
+        todo.finished = finished;
+        this.todos = [...this.todos];
+    }
+
     render() {
+
         return html`
                     <div class="center-div">
-                    <wired-checkbox checked style="color: darkgreen">squishy fish</wired-checkbox>
-                    <wired-checkbox >gummy stars</wired-checkbox>
-                    <wired-checkbox >kayak cookies</wired-checkbox>
-                    <wired-checkbox >rugelach, but only from Zaro's</wired-checkbox>
+                        <todo-list .todos=${this.todos} 
+                            @change-todo-finished="${this._changeTodoFinished}" 
+                            @remove-todo="${this._removeTodo}">    
+                        </todo-list>
+                        <input id="addTodo" type="text" /><button @click="${this._addTodo}">Add</button>} 
                     </div>
-`
+                    `
     }
 }
 
