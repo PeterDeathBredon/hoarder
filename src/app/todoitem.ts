@@ -5,6 +5,10 @@ import componentStyle from './component-todo-item.sass';
 import 'wired-checkbox';
 import 'wired-fab';
 import 'wired-input';
+// @ts-ignore
+import {store} from './store/store.ts'
+// @ts-ignore
+import {changeTodo, deleteTodo} from './store/actions.ts'
 
 @customElement('todo-item')
 class TodoItem extends LitElement {
@@ -21,7 +25,7 @@ class TodoItem extends LitElement {
     }
 
     _removeTodo(e: Event) {
-        this.dispatchEvent(new CustomEvent('remove-todo', {bubbles: true, composed: true, detail: this.todo}));
+        store.dispatch(deleteTodo(this.todo));
     }
 
     _changeTodoFinished(e: Event,  todo: ToDo) {
@@ -36,8 +40,7 @@ class TodoItem extends LitElement {
     }
 
     _notifyUpdate() {
-        const eventDetails = { todo: this.todo};
-        this.dispatchEvent(new CustomEvent('change-todo', { bubbles: true, composed: true, detail: eventDetails}));
+        store.dispatch(changeTodo(this.todo));
     }
 
     _toEditMode(e: Event) {

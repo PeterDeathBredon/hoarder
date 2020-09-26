@@ -5,14 +5,23 @@ import appStyle from './component_app.sass';
 import {ToDo} from './structures/todo.ts';
 import './todolist.ts'
 import 'wired-input';
+// @ts-ignore
+import {store} from './store/store.ts';
+import {connect} from 'pwa-helpers/connect-mixin';
+// @ts-ignore
+import {addTodo, changeTodo, deleteTodo} from './store/actions.ts'
 
 @customElement('hoarder-app')
-class App extends LitElement {
-    todos: any[];
+class App extends connect(store)(LitElement) {
+    todos: Array<ToDo> = [];
 
     constructor() {
         super();
         this.todos = [new ToDo("Gummy Stars"), new ToDo("Squishy Fish")];
+    }
+
+    stateChanged(state: Array<ToDo>) {
+        this.todos = state;
     }
 
     static get properties() {
@@ -27,28 +36,7 @@ class App extends LitElement {
     }
 
     _addTodo() {
-        console.log("add todo");
-        console.log("1", this.todos);
-        let newTodos = [...this.todos]
-        console.log("2", newTodos);
-        newTodos.push(new ToDo("", false, true));
-        this.todos = newTodos;
-        console.log("3", this.todos);
-    }
-
-    _removeTodo(e: CustomEvent) {
-        const todoToDel = e.detail;
-        this.todos = this.todos.filter(todo => todo.id !== todoToDel.id);
-    }
-
-    _changeTodo(e: CustomEvent) {
-        console.log("change todo");
-        console.log(e.detail);
-        const newTodo = e.detail.todo;
-        const oldTodo = this.todos.filter(todo => todo.id === newTodo.id)[0];
-        this.todos[this.todos.indexOf(oldTodo)] = {...newTodo}
-        this.todos = [...this.todos];
-        console.log(this.todos)
+        store.dispatch(addTodo(new ToDo()));
     }
 
     _filter() {
@@ -59,9 +47,7 @@ class App extends LitElement {
         console.log("rendering app.ts");
         return html`
                     <div class="center-div">
-                        <todo-list .todos=${this.todos} 
-                            @change-todo="${this._changeTodo}" 
-                            @remove-todo="${this._removeTodo}">    
+                        <todo-list .todos=${this.todos} >    
                         </todo-list>
                         <div class="button-list">
                             <wired-fab id="add-button" 
