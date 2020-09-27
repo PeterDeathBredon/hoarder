@@ -9,6 +9,9 @@ import 'wired-input';
 import {store} from './store/store.ts'
 // @ts-ignore
 import {changeTodo, deleteTodo} from './store/actions.ts'
+// @ts-ignore
+import {db} from './store/db.ts'
+
 
 @customElement('todo-item')
 class TodoItem extends LitElement {
@@ -19,16 +22,26 @@ class TodoItem extends LitElement {
             todo: {type: Object},
         }
     }
+
     static get styles() {
         // return appStyle;
         return componentStyle;
     }
 
     _removeTodo(e: Event) {
-        store.dispatch(deleteTodo(this.todo));
+        db.get(this.todo._id)
+            .then((doc: any) => {
+                db.remove(doc)
+                    .then((response: any) => {
+                        store.dispatch(deleteTodo(this.todo));
+                    })
+            })
+            .catch((err: any) => {
+                console.log(err);
+            })
     }
 
-    _changeTodoFinished(e: Event,  todo: ToDo) {
+    _changeTodoFinished(e: Event, todo: ToDo) {
         this.todo.finished = (<HTMLInputElement>e.target).checked;
         this._updateTodo();
         this._notifyUpdate();
@@ -40,14 +53,27 @@ class TodoItem extends LitElement {
     }
 
     _notifyUpdate() {
-        store.dispatch(changeTodo(this.todo));
+        db.get(this.todo._id)
+            .then((doc: Object) => {
+                db.put({...doc,
+                    ...this.todo})
+                    .then((response: any) => {
+                        store.dispatch(changeTodo(this.todo));
+                    })
+            })
+            .catch((response: any) => {
+                console.log(response);
+            });
+
     }
 
     _toEditMode(e: Event) {
         if (!this.todo.inEditMode) {
             this.todo = {...this.todo, inEditMode: true}
-        };
+        }
+        ;
     }
+
     _updateTodo() {
         if (this.todo.inEditMode) {
             const edit = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
@@ -57,20 +83,20 @@ class TodoItem extends LitElement {
                 inEditMode: false
             };
             return true;
-        }
-        else
+        } else
             return false;
 
     }
 
 
-    updated () {
+    updated() {
         if (this.todo.inEditMode) {
             const el = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
-            setTimeout(() => el.focus(),0);
+            setTimeout(() => el.focus(), 0);
         }
     }
-    render () {
+
+    render() {
 
         const valuestrEdit = html`<wired-input style="color: darkgray" id="edit-text" value="${this.todo.text}" .autofocus></wired-input>
                          <wired-fab  
