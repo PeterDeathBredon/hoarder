@@ -6,14 +6,21 @@ import {ToDo} from './structures/todo.ts'
 import './todoitem.ts'
 
 @customElement('todo-list')
-class TodoList extends LitElement {
+export class TodoList extends LitElement {
 
-    todos: Array<ToDo>
+    todos: Array<ToDo>;
+    showFinished: Boolean;
 
     static get properties() {
         return {
-            todos: {type: Array}
+            todos: {type: Array},
+            showFinished: {type: Boolean}
         }
+    }
+
+    constructor() {
+        super();
+        this.showFinished = false;
     }
 
     static get styles() {
@@ -23,13 +30,13 @@ class TodoList extends LitElement {
 
 
     render() {
+        console.log(this.showFinished);
+        const filteredTodos = this.todos.filter(todo => (this.showFinished && todo.finished) || !todo.finished);
 
-        return (this.todos.length || 0) ? html`
-        <div class="list">
-            ${this.todos.map(todo => html`
-            <todo-item .todo=${todo} "></todo-item>`
-        )}
-        </div>
+        return (filteredTodos.length || 0) > 0  ? html`
+            <div class="list">
+              ${filteredTodos.map(todo => html`<todo-item .todo=${todo}></todo-item>`)} 
+            </div>
         ` : html`<p style="text-align: center">We\'re safe. We hoarded everything!<br>(Or is the list just empty?)</p>`;
     }
 }

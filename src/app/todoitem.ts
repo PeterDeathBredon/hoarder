@@ -1,5 +1,6 @@
 import {customElement, html, LitElement} from "lit-element"
-import {ToDo} from "./structures/todo";
+// @ts-ignore
+import {ToDo} from './structures/todo.ts';
 // @ts-ignore
 import componentStyle from './component-todo-item.sass';
 import 'wired-checkbox';
@@ -11,6 +12,7 @@ import {store} from './store/store.ts'
 import {changeTodo, deleteTodo} from './store/actions.ts'
 // @ts-ignore
 import {db} from './store/db.ts'
+import {nanoid, random} from "nanoid";
 
 
 @customElement('todo-item')
@@ -19,7 +21,7 @@ class TodoItem extends LitElement {
 
     static get properties() {
         return {
-            todo: {type: Object},
+            todo: {type: ToDo},
         }
     }
 
@@ -38,12 +40,17 @@ class TodoItem extends LitElement {
             })
             .catch((err: any) => {
                 console.log(err);
+                store.dispatch(deleteTodo(this.todo));
             })
     }
 
     _changeTodoFinished(e: Event, todo: ToDo) {
         this.todo.finished = (<HTMLInputElement>e.target).checked;
-        this._updateTodo();
+        if (!this._updateTodo()) {
+            this.todo = {
+                ...this.todo,
+            };
+        }
         this._notifyUpdate();
     }
 
@@ -53,13 +60,9 @@ class TodoItem extends LitElement {
     }
 
     _notifyUpdate() {
-        db.get(this.todo._id)
-            .then((doc: Object) => {
-                db.put({...doc,
-                    ...this.todo})
-                    .then((response: any) => {
-                        store.dispatch(changeTodo(this.todo));
-                    })
+        db.put({...this.todo})
+            .then((response: any) => {
+                store.dispatch(changeTodo(this.todo));
             })
             .catch((response: any) => {
                 console.log(response);
@@ -97,8 +100,9 @@ class TodoItem extends LitElement {
     }
 
     render() {
-
-        const valuestrEdit = html`<wired-input style="color: darkgray" id="edit-text" value="${this.todo.text}" .autofocus></wired-input>
+        console.log(`rendering ${this.todo.text}: ${this.todo.finished}`);
+        const valuestrEdit = html`<wired-input style="color: black;font-weight: bold" id="edit-text" value="${this.todo.text}" 
+                                               .autofocus></wired-input>
                          <wired-fab  
                             @click=${this._editOk}><i class="material-icons md-light">done</i></wired-fab>
                          <wired-fab
@@ -106,16 +110,16 @@ class TodoItem extends LitElement {
         const valuestrNormal = html`<span style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
                         @click=${(e: Event) => this._toEditMode(<Event>e)}>${this.todo.text || 'whatchamacallit'}</span>`
 
-
         return (html`
             <div class="list-item">
-                <wired-checkbox
+                <wired-checkbox type="checkbox"
                     .checked=${this.todo.finished}
                     style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
                     @change=${(e: Event) => this._changeTodoFinished(<Event>e, this.todo)}  
-                >
-                </wired-checkbox>
-                ${this.todo.inEditMode ? valuestrEdit : valuestrNormal}
+                ></wired-checkbox>
+                <div class="edit-and-buttons">
+                    ${this.todo.inEditMode ? valuestrEdit : valuestrNormal}
+                </div>
             </div>
             `)
     }

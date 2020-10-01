@@ -1,23 +1,50 @@
 @import materialicons
 i.material-icons.md-light
   color: black
+  //@media only screen and (max-width: 600px)
+  //  font-size: 1.2rem
 
-wired-checkbox
-  font-style: normal
-  margin-bottom: 1em
 \:host
   color: white
   font-family: IndieFlower, serif
   font-size: 2rem
+.list-item
+  display: flex
+  flex-direction: row
+  //align-items: baseline
+  @media only screen and (max-width: 600px)
+    font-size: .8em
+wired-checkbox
+  font-style: normal
+  margin-top: 5%
 
 wired-fab
   transform: translatey(.3em)
   color: black
   width: 50px
   height: 50px
+  margin-left: 10px
+  margin-right: 10px
+  //@media only screen and (max-width: 600px)
+  //  width: 40px
+  //  height: 35px
 
 wired-input
   color: black
   font-family: IndieFlower, serif
   font-size: 1.5rem
-  width: calc(100% - 200px)
+  min-width: 400px
+  user-select: text
+  -moz-user-select: text
+  -webkit-user-select: text
+  @media only screen and (max-width: 600px)
+    min-width: 100%
+    font-size: .8em
+
+.edit-and-buttons
+  display: flex
+  flex-direction: row
+  //width: calc(100% - 180px)
+  flex-wrap: wrap
+  @media only screen and (max-width: 600px)
+    flex-direction: row-reverse

@@ -38,15 +38,51 @@ header
   background: rgba(0,0,0,.7)
   z-index: 1
 
-  h1
-    margin: 0px
-    font-size: 3em
-    font-family: Creepster
-    text-align: center
-    color: var(--hoarder-heading-color)
-    height: 5rem
-
 body
+  box-sizing: border-box
   padding-top: 20vh
+  @media only screen and (max-width: 600px)
+    padding-top: 15vh
+  padding-left: 10px
+  padding-right: 10px
+
 .finished
   color: forestgreen
+
+
+#headline
+  display: block
+  margin: 0px
+  font-size: 3em
+  font-family: Creepster
+  text-align: center
+  color: var(--hoarder-heading-color)
+  padding-top: 1rem
+  height: 5rem
+  @media only screen and (max-width: 600px)
+    font-size: 2em
+    height: 3rem
+  p
+    display: inline-block
+
+.creepy
+  display: block
+  background: linear-gradient(111deg, rgba(250,237,62,1) 0%, rgba(250,237,62,1) 100%)
+  -webkit-background-clip: text
+  -webkit-text-fill-color: transparent
+  //background-position-x: 50px
+  animation-name: creepy
+  animation-duration: .3s
+  animation-timing-function: ease-in-out
+
+@keyframes creepy
+  from
+    background: linear-gradient(111deg, rgba(250,237,62,1) 0%, rgba(250,237,62,1) 39%, rgb(250, 53, 4) 46%, rgba(250,237,62,1) 53%, rgba(250,237,62,1) 100%)
+    -webkit-background-clip: text
+    -webkit-text-fill-color: transparent
+    background-position-x: -60px
+  to
+    background: linear-gradient(111deg, rgba(250,237,62,1) 0%, rgba(250,237,62,1) 39%, rgba(250,53,4,1) 46%, rgba(250,237,62,1) 53%, rgba(250,237,62,1) 100%)
+    background-position-x: 60px
+    -webkit-background-clip: text
+    -webkit-text-fill-color: transparent
