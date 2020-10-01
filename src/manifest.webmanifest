@@ -1,7 +1,7 @@
 {
   "name": "Hoarder",
   "short_name": "Hoarder",
-  "start_url": ".",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
   "description": "A hoarding app",

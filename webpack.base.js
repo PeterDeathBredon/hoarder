@@ -25,16 +25,16 @@ module.exports = {
         new WebpackPwaManifest({
             name: "Hoarder",
             short_name: "Hoarder",
-            start_url: ".",
+            start_url: "./index.html",
             display: "standalone",
             background_color: "#000000",
             description: "A hoarding app",
             inject: true,
-            fingerprints: true,
-            crossorigin: null, //can be null, use-credentials or anonymous
+            fingerprints: false,
+            crossorigin: "use-credentials", //can be null, use-credentials or anonymous
             icons: [
                 {
-                    src: path.resolve('src/assets/hoarder192.png'),
+                    src: path.resolve('src/assets/icon_192x192.png'),
                     sizes: [48, 72, 96, 128, 192, 256, 384, 512] // multiple sizes
                 },
                 // {
@@ -42,7 +42,7 @@ module.exports = {
                 //     size: '1024x1024' // you can also use the specifications pattern
                 // },
                 {
-                    src: path.resolve('src/assets/hoarder192.png'),
+                    src: path.resolve('src/assets/icon_192x192.png'),
                     size: '192x192',
                     purpose: 'maskable'
                 }
