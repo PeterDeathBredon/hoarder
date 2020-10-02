@@ -74,7 +74,6 @@ class TodoItem extends LitElement {
         if (!this.todo.inEditMode) {
             this.todo = {...this.todo, inEditMode: true}
         }
-        ;
     }
 
     _updateTodo() {
@@ -111,7 +110,7 @@ class TodoItem extends LitElement {
                         @click=${(e: Event) => this._toEditMode(<Event>e)}>${this.todo.text || 'whatchamacallit'}</span>`
 
         return (html`
-            <div class="list-item">
+            <div class="list-item"">
                 <wired-checkbox type="checkbox"
                     .checked=${this.todo.finished}
                     style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"

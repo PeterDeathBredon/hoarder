@@ -12,7 +12,6 @@ window.addEventListener("load", () => {
 
     configureRouter();
     addServiceWorker();
-    installSyncEvents();
 
 })
 

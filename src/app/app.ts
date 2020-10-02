@@ -1,4 +1,4 @@
-import {customElement, html, LitElement} from 'lit-element';
+import {customElement, html, LitElement, PropertyValues} from 'lit-element';
 // @ts-ignore
 import appStyle from './component_app.sass';
 // @ts-ignore
@@ -131,11 +131,11 @@ class App extends connect(store)(LitElement) {
                                     <wired-fab id="add-button" 
                                         @click=${this._addTodo}><i class="material-icons">add_shopping_cart</i>
                                     </wired-fab>
+                                    <wired-fab id="sync-button" 
+                                        @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
+                                    </wired-fab>
                                     <wired-fab id="cleanup-button" 
                                         @click=${this._filter} style="${filterButtonStyle}"><i class="material-icons">rule</i>
-                                    </wired-fab>
-                                    <wired-fab id="sync-button" 
-                                        @click=${this._sync} style="visibility:${this.showSyncButton ? 'visible' : 'hidden'};--wired-fab-bg-color: #ff0000"><i class="material-icons">sync</i>
                                     </wired-fab>
                                     <button id="test-button" @click=${this._test}>test</button>
                                 </div>`
@@ -173,5 +173,6 @@ class App extends connect(store)(LitElement) {
         this.showSyncButton = false;
         this._init();
     }
+
 }
 
