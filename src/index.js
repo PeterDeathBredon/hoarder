@@ -1,6 +1,8 @@
 import "./app/app.ts"
 import "./app/styles.sass"
 import "./assets/favicon.ico"
+import {registerRoutes} from "./app/routing";
+
 // import "./sw.js"
 
 // import "./manifest.webmanifest"
@@ -8,10 +10,17 @@ import "./assets/favicon.ico"
 
 window.addEventListener("load", () => {
 
+    configureRouter();
     addServiceWorker();
     installSyncEvents();
 
 })
+
+function configureRouter() {
+    let el = document.getElementById("app-container");
+    console.log("app-container: ", el);
+    registerRoutes(el);
+}
 
 async function addServiceWorker() {
   try {
@@ -23,17 +32,4 @@ async function addServiceWorker() {
   }
 }
 
-function installSyncEvents() {
-    const app = document.getElementById("app");
-    const headline = document.getElementById("animate");
-    app.addEventListener("sync-error", () => {
-        console.log("sync error");
-    });
-    app.addEventListener("sync-changed", () => {
-        headline.classList.remove("creepy");
-        void headline.offsetWidth;
-        headline.classList.add("creepy");
-        console.log("sync changed");
-    });
-}
 
