@@ -12,7 +12,9 @@ import {registerRoutes} from "./app/routing";
 window.addEventListener("load", () => {
 
     configureRouter();
-    // addServiceWorker();
+    console.log(window.location.toString());
+    if (!window.location.toString().startsWith("https://192.168"))
+        addServiceWorker();
 
 })
 
