@@ -7,7 +7,7 @@ A shopping list and todo list app
 offline rather than online. 
 check it out: https://sleepy-easley-c64c05.netlify.app
 
-# cloning this
+## cloning this
 this project needs a credentials.ts in src/app/store. src/app/store/db.ts imports username and password needed to access the remote couch-db.
 
 ## how to install the app for the first time
