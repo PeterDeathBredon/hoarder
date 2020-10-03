@@ -1,4 +1,5 @@
 import "./app/app.ts"
+import "./app/component-undefined-route.ts"
 import "./app/styles.sass"
 import "./assets/favicon.ico"
 import {registerRoutes} from "./app/routing";
@@ -11,14 +12,17 @@ import {registerRoutes} from "./app/routing";
 window.addEventListener("load", () => {
 
     configureRouter();
-    addServiceWorker();
+    // addServiceWorker();
 
 })
 
 function configureRouter() {
     let el = document.getElementById("app-container");
-    console.log("app-container: ", el);
-    registerRoutes(el);
+    if (el === null) {
+        alert("undefined element app-container!");
+    } else {
+        registerRoutes(el);
+    }
 }
 
 async function addServiceWorker() {

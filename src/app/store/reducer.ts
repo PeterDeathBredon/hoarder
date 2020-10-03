@@ -3,7 +3,7 @@ import {ToDo} from '../structures/todo.ts'
 // @ts-ignore
 import {Action, ADD_TODO, CHANGE_TODO, DEL_TODO, INIT, InitAction, ToDoAction, TOGGLE_FILTER} from './actions.ts'
 
-class State {
+export class State {
     todos: ToDo[] = []
     showFinished: Boolean = false
 }
