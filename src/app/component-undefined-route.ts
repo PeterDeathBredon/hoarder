@@ -9,6 +9,7 @@ import {Router} from '@vaadin/router'
 @customElement('no-route')
 class NoRoute extends (LitElement) {
 
+    page = "";
     constructor() {
         super();
     }
@@ -21,13 +22,15 @@ class NoRoute extends (LitElement) {
         // alert("back!");
         Router.go("/");
     }
-
+    onBeforeEnter(location: any, commands: any, router: Router) {
+        this.page = location.pathname;
+    }
     render() {
         console.log("rendering component-undefined-route.ts");
         return html`
                     <div class="center-div">
                         <div>
-                            <div class="error">Ooops. That page does not exist ...</div>
+                            <div class="error">Ooops. Page "${this.page}" does not exist ...</div>
                             <div>
                                <wired-fab id="home-button" 
                                      @click=${this._back} style="color: var(--wired-fab-bg-color)">
