@@ -174,11 +174,16 @@ class HoarderApp extends connect(store)(LitElement) {
 
     _gotoList(e: Event) {
         console.log(this);
-        console.log(e);
-        // @ts-ignore
-        const listId = this["list-id"];
-        console.log(listId);
-        Router.go(`/view/${listId}`);
+        let inputs = Array.from(this.shadowRoot.querySelectorAll("input"));
+        if (inputs.length === 0) {
+            // console.log("inputs", inputs)
+            // console.log("target", e.target);
+            // console.log("current target", e.currentTarget);
+            // @ts-ignore
+            const listId = e.currentTarget["list-id"];
+            console.log(listId);
+            Router.go(`/view/${listId}`);
+        }
     }
 
     _update_list_name(e: Event) {
@@ -190,21 +195,19 @@ class HoarderApp extends connect(store)(LitElement) {
             db.put(updatedList).then(() => {
                 store.dispatch(editList(updatedList));
             })
-                .catch(() => {
-                    alert("There was trouble saving this item.");
-                })
+            .catch(() => {
+                alert("There was trouble saving this item.");
+            })
         }
-        this.editing = "";
+        setTimeout(() => {
+            this.editing = "";
+            console.log("editing reset.")
+        }, 100);
     }
 
     protected updated(_changedProperties: any) {
         super.updated(_changedProperties);
-        if (this.editing === "") {
-            const elements = Array.from(this.shadowRoot.querySelectorAll(".list-item"));
-            for (let el of (<Array<HTMLElement>>elements)) {
-                el.addEventListener("click", this._gotoList.bind(el));
-            }
-        } else {
+        if (this.editing !== "") {
             this.shadowRoot.getElementById("edit-list").focus();
         }
     }
@@ -220,7 +223,8 @@ class HoarderApp extends connect(store)(LitElement) {
                                         <div @click="${this._gotoList}" class="list-item" .list-id="${list._id}">
                                             <i class="material-icons">list</i>
                                             ${this.editing === list._id 
-                                                ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" value="${list.text}"/>`
+                                                ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" 
+                                                        value="${list.text}"/>`
                                                 : html`<span>${list.text}</span>
                                             <button @click=${this._editList}" class="edit-list-button">
                                                 <i class="material-icons" .list-id="${list._id}">edit</i>
