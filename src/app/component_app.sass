@@ -5,7 +5,7 @@ i.material-icons
   color: black
   font-size: 2em
   font-weight: bolder
-  text-shadow: 1px 1px black
+  //text-shadow: 1px 1px black
 .center-div
   display: flex
   flex-direction: column
@@ -51,3 +51,56 @@ i.material-icons
   left: auto
   text-align: right
   top: 5em
+
+.todo-lists-list
+  color: white
+  font-family: IndieFlower, SansSerif
+  font-size: 2em
+  min-width: 25vw
+  @media only screen and (max-width: 600px)
+    min-width: 75vw
+
+.list-item
+  padding: .5em 1em .5em 1em
+  background: #0776a2
+  border-bottom: 2px black solid
+  border-top: 2px black solid
+  display: flex
+  flex-direction: row
+  align-items: center
+  @media only screen and (max-width: 600px)
+    font-size: .8em
+  @media only screen and (max-height: 500px)
+    font-size: 1em
+    padding: 5px 1em 5px 1em
+    i
+      line-height: .8em
+
+  span
+    display: inline-block
+    margin-left: 1em
+    width: 100%
+
+#edit-list
+  width: 100%
+  margin-right: 3em
+  font-family: IndieFlower
+  font-size: 1em
+.edit-list-button
+  background: rgba(0,0,0,0)
+  border: none
+  margin: 0px 0px 0px 1em
+  height: 3em
+  //margin: 0px 0px 0px 2em
+  //margin-left: 2em
+  //i
+  //  transform: translateX(-.2em)
+
+  &:hover
+   background: rgba(255,255,255,.5)
+  &:active
+    background: rgba(0,0,0,.5)
+#end-of-list
+  height: 110px
+  width: 100%
+

@@ -1,10 +1,26 @@
 // @ts-ignore
-import {ToDo} from '../structures/todo.ts'
+import {ToDo} from './todo.ts'
 // @ts-ignore
-import {Action, ADD_TODO, CHANGE_TODO, DEL_TODO, INIT, InitAction, ToDoAction, TOGGLE_FILTER} from './actions.ts'
+import {List} from './list.ts'
+// @ts-ignore
+import {
+    Action,
+    ADD_TODO,
+    CHANGE_TODO,
+    DEL_TODO,
+    INIT_LIST_VIEW,
+    INIT_APP,
+    ADD_LIST,
+    InitAction,
+    ToDoAction,
+    ListInitAction,
+    TOGGLE_FILTER,
+    ListItemAction
+} from './actions.ts'
 
 export class State {
     todos: ToDo[] = []
+    lists: List[] = []
     showFinished: Boolean = false
 }
 
@@ -13,7 +29,7 @@ const INITIAL_STATE = new State();
 
 export const reducer = (state: State = INITIAL_STATE, action: Action): State => {
     switch (action.type) {
-        case INIT: {
+        case INIT_LIST_VIEW: {
             console.log('initializing store with', (<InitAction>action).todos);
             let newState = {...state};
             newState.todos = (<InitAction>action).todos.map((todo: ToDo) => {
@@ -55,6 +71,22 @@ export const reducer = (state: State = INITIAL_STATE, action: Action): State => 
             newState.todos = newState.todos.filter((todo: ToDo) => todo._id !== (<ToDoAction>action).todo._id);
             return newState;
 
+        }
+        case INIT_APP: {
+            console.log('initializing App with', (<ListInitAction>action).lists);
+            let newState = {...state};
+            newState.lists = (<ListInitAction>action).lists.map((list: List) => {
+                return {...list}
+            });
+            return newState;
+        }
+        case ADD_LIST: {
+            console.log("reducer: ADD_LIST", (<ListItemAction>action).list);
+            let newState = {...state};
+            newState.lists = [...state.lists];
+            newState.lists.push((<ListItemAction>action).list);
+
+            return newState;
         }
 
         default:

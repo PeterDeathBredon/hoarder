@@ -2,7 +2,7 @@ import {customElement, html, LitElement, PropertyValues} from 'lit-element';
 // @ts-ignore
 import componentStyle from './component-todo-list.sass';
 // @ts-ignore
-import {ToDo} from './structures/todo.ts'
+import {ToDo} from './store/todo.ts'
 import './todoitem.ts'
 
 @customElement('todo-list')

@@ -1,6 +1,6 @@
 import {customElement, html, LitElement} from "lit-element"
 // @ts-ignore
-import {ToDo} from './structures/todo.ts';
+import {ToDo} from './store/todo.ts';
 // @ts-ignore
 import componentStyle from './component-todo-item.sass';
 import 'wired-checkbox';
@@ -47,8 +47,7 @@ class TodoItem extends LitElement {
     _changeTodoFinished(e: Event, todo: ToDo) {
         this.todo.finished = (<HTMLInputElement>e.target).checked;
         if (!this._updateTodo()) {
-            this.todo = {
-                ...this.todo,
+            this.todo = {...this.todo,
             };
         }
         this._notifyUpdate();
@@ -60,9 +59,10 @@ class TodoItem extends LitElement {
     }
 
     _notifyUpdate() {
-        db.put({...this.todo})
+        const updatedTodo = {...new ToDo(), ...this.todo};
+        db.put(updatedTodo)
             .then((response: any) => {
-                store.dispatch(changeTodo(this.todo));
+                store.dispatch(changeTodo(updatedTodo));
             })
             .catch((response: any) => {
                 console.log(response);
