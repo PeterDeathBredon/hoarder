@@ -1,5 +1,6 @@
 const path = require("path");
 const baseConfig = require('./webpack.base.js')
+const webpack = require("webpack");
 const {merge} = require('webpack-merge')
 
 module.exports = merge(baseConfig, {
@@ -8,7 +9,10 @@ module.exports = merge(baseConfig, {
     output: {
         filename: "[name].js"
     },
-    plugins: [],
+    plugins: [new webpack.NormalModuleReplacementPlugin(
+        /credentials\.ts/,
+        './dev-credentials.ts'
+    )],
     module: {
         rules: [
             {

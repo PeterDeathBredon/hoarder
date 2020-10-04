@@ -1,7 +1,7 @@
 {
-  "name": "lihtml-webpack",
+  "name": "Hoarder",
   "version": "1.0.0",
-  "description": "",
+  "description": "Hoarder",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --host 192.168.178.31 --config webpack.dev.js --open",

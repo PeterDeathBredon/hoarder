@@ -9,8 +9,7 @@ module.exports = {
         https: true
     },
     entry: {
-        main: "./src/index.js",
-        vendor: "./src/vendor.js"
+        main: "./src/index.js"
     },
     plugins: [new HtmlWebPackPlugin(
                 {
