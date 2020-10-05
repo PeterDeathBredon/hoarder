@@ -1,4 +1,4 @@
-import {customElement, eventOptions, html, LitElement} from 'lit-element';
+import {customElement, html, LitElement} from 'lit-element';
 // @ts-ignore
 import appStyle from './component_app.sass';
 // @ts-ignore
@@ -11,7 +11,7 @@ import {connect} from 'pwa-helpers/connect-mixin';
 // @ts-ignore
 import {addList, initApp, editList} from './store/actions.ts'
 // @ts-ignore
-import {db, remoteCouch, sync} from './store/db.ts'
+import {db, remoteCouch, sync, init_db} from './store/db.ts'
 // @ts-ignore
 import {State} from './store/reducer.ts'
 import {Router} from "@vaadin/router";
@@ -53,33 +53,28 @@ class HoarderApp extends connect(store)(LitElement) {
         return appStyle
     }
 
-    _get_lists(rows: [{ doc: Object }]) {
-        return rows
-            .map(row => {
-                return {...new List(), ...row.doc}
-            })
-            .filter(row => row.type == TYPE_LIST);
-    }
-
     _init() {
-        db.allDocs({include_docs: true})
-            .then((response: any) => {
-                let lists = this._get_lists(response.rows)
-                if (lists.length > 0) {
-                    store.dispatch(initApp(lists));
-                } else {
-                    this._addDefaultList()
-                        .then(() => {
-                            console.log("added default list")
-                        })
-                        .catch(e => {
-                            console.log("error adding default list", e);
-                        });
-                }
-                sync(remoteCouch,
-                    this._sync_changed.bind(this),
-                    this._sync_error.bind(this));
-                this.db_initialized = true;
+        init_db()
+            .then(() => {
+                db.query('lists',{key: TYPE_LIST, include_docs: true})
+                    .then((response: any) => {
+                        let lists = response.rows.map((row:any) => row.doc);
+                        if (lists.length > 0) {
+                            store.dispatch(initApp(lists));
+                        } else {
+                            this._addDefaultList()
+                                .then(() => {
+                                    console.log("added default list")
+                                })
+                                .catch(e => {
+                                    console.log("error adding default list", e);
+                                });
+                        }
+                        sync(remoteCouch,
+                            this._sync_changed.bind(this),
+                            this._sync_error.bind(this));
+                        this.db_initialized = true;
+                    })
             })
             .catch((response: any) => {
                 console.log(response);
@@ -92,9 +87,9 @@ class HoarderApp extends connect(store)(LitElement) {
         // if (inEditMode.length > 0)
         //     return
 
-        db.allDocs({include_docs: true})
+        db.query('lists',{key: TYPE_LIST, include_docs: true})
             .then((response: any) => {
-                let lists = this._get_lists(response.rows)
+                let lists = response.rows.map((row:any) => row.doc);
                 store.dispatch(initApp(lists));
             })
             .catch((response: any) => {
@@ -104,7 +99,7 @@ class HoarderApp extends connect(store)(LitElement) {
 
     _sync_error(err: {}) {
         this.sync_status = 'alone for good.';
-        console.log("error synching", err);
+        console.log("error syncing", err);
         this.dispatchEvent(new CustomEvent("sync-error", {bubbles: true, composed: true, detail: err}));
     }
 
