@@ -5,6 +5,7 @@ import appStyle from './component_app.sass';
 import {ToDo, TYPE_TODO} from './store/todo.ts';
 import './todolist.ts'
 import 'wired-input';
+
 // @ts-ignore
 import {store} from './store/store.ts';
 import {connect} from 'pwa-helpers/connect-mixin';
@@ -14,7 +15,10 @@ import {addTodo, initList, toggleFilter} from './store/actions.ts'
 import {db, remoteCouch, sync} from './store/db.ts'
 // @ts-ignore
 import {State} from './store/reducer.ts'
-
+// @ts-ignore
+import {router} from './routing.js'
+// @ts-ignore
+import {List} from "./store/list.ts";
 
 @customElement('list-view')
 class ListView extends connect(store)(LitElement) {
@@ -22,18 +26,17 @@ class ListView extends connect(store)(LitElement) {
     db_initialized: boolean = false;
     sync_status: string = '';
     showSyncButton: boolean = false;
-
-    constructor() {
-        super();
-        this._init();
-    }
+    listHeader: string;
+    listId: string;
+    location: Object;
 
     static get properties() {
         return {
             state: {type: State},
             sync_status: {type: String},
             db_initialized: {type: Boolean},
-            showSyncButton: {type: Boolean}
+            showSyncButton: {type: Boolean},
+            listHeader: {type: String}
         }
     }
 
@@ -41,16 +44,28 @@ class ListView extends connect(store)(LitElement) {
         return appStyle
     }
 
-    _get_todos(rows: [{doc: Object}]) {
-        return rows
-            .map(row => {return {... new ToDo(), ...row.doc}})
-            .filter(row => row.type==TYPE_TODO);
+    onAfterEnter(location: any, commands:any , router: any) {
+        try {
+            this.location = router.location;
+            this.listId = router.location.params.id;
+        } catch (err) {
+            console.log(err);
+        }
+        this._init();
+        this._installSyncEvents();
     }
 
     _init() {
-        db.allDocs({include_docs: true})
+        db.get(this.listId)
             .then((response: any) => {
-                let todos = this._get_todos(response.rows)
+            this.listHeader = response.text;
+        })
+
+        console.log("listHeader is", router.location.params.id);
+
+        db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
+            .then((response: any) => {
+                let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
                 store.dispatch(initList(todos));
                 this.sync_status = 'collaborating...';
                 sync(remoteCouch,
@@ -69,9 +84,9 @@ class ListView extends connect(store)(LitElement) {
         if (inEditMode.length > 0)
             return
 
-        db.allDocs({include_docs: true})
+        db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
             .then((response: any) => {
-                let todos = this._get_todos(response.rows)
+                let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
                 store.dispatch(initList(todos));
             })
             .catch((response: any) => {
@@ -96,7 +111,7 @@ class ListView extends connect(store)(LitElement) {
     }
 
     _addTodo() {
-        let todo = new ToDo("", false, true);
+        let todo = new ToDo("", false, true, this.listId);
         store.dispatch(addTodo(todo));
         // db.put(todo)
         //     .then((response: Object) => {
@@ -127,9 +142,11 @@ class ListView extends connect(store)(LitElement) {
         // let filterButtonStyle = `--wired-fab-bg-color: red`;
         return html`
                     <div class="center-div">
+                        
                         ${this.db_initialized
-            ? html`
-                                <todo-list .showFinished=${this.state.showFinished} .todos=${this.state.todos} >    
+            ? html`             
+                                <todo-list .showFinished=${this.state.showFinished} .todos=${this.state.todos} 
+                                    .listHeader="${this.listHeader}">    
                                 </todo-list>
                                 <div class="button-list">
                                     <wired-fab id="add-button" 
@@ -145,11 +162,6 @@ class ListView extends connect(store)(LitElement) {
             : html`<div class="loading">let's see what we need ...</div>`}
                     </div>
                     `
-    }
-
-    onAfterEnter(location: any, commands:any , router: any) {
-        console.log("OnAfterEnter", location, commands, router);
-        this._installSyncEvents();
     }
 
     _installSyncEvents() {

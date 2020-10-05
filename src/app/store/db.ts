@@ -13,21 +13,40 @@ export const db = new PouchDB('hoarder');
 
 export async function init_db() {
     try {
-        let index = {
+        let list_index = {
             _id: '_design/lists',
             views: {
                 'lists': {
                     map: function(doc: any) {
                         // @ts-ignore
-                        emit(doc.type == TYPE_LIST || "todo");
+                        emit(doc.type || "todo");
                     }.toString()
                 }
             }
         }
-        await db.put(<any>index)
-                .then(()=>{console.log("index initialized")})
+        await db.put(<any>list_index)
+                .then(()=>{console.log("index 'lists' initialized")})
     } catch (err) {
         console.log("error creating index 'lists'");
+    }
+
+    try {
+        let list_todos = {
+            _id: '_design/todos',
+            views: {
+                'todos': {
+                    map: function(doc: any) {
+                        // @ts-ignore
+                            // @ts-ignore
+                        emit([doc.type || "todo", doc.idList || "default"]);
+                    }.toString()
+                }
+            }
+        }
+        await db.put(<any>list_todos)
+            .then(()=>{console.log("todos index initialized")})
+    } catch (err) {
+        console.log("error creating index 'todos'");
     }
 }
 

@@ -30,6 +30,12 @@ body
   margin: 0px
   font-size: 16px
   user-select: none
+  box-sizing: border-box
+  padding-top: 100px
+  @media only screen and (max-width: 600px)
+    padding-top: 70px
+  padding-left: 10px
+  padding-right: 10px
 
 #app-container
   height: 100%
@@ -41,14 +47,6 @@ header
   width: 100%
   background: rgba(0,0,0,.7)
   z-index: 1
-
-body
-  box-sizing: border-box
-  padding-top: 100px
-  @media only screen and (max-width: 600px)
-    padding-top: 15vh
-  padding-left: 10px
-  padding-right: 10px
 
 .finished
   color: forestgreen

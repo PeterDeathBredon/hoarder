@@ -3,6 +3,7 @@ import {customElement, html, LitElement} from 'lit-element';
 import appStyle from './component_app.sass';
 // @ts-ignore
 import {List, TYPE_LIST} from './store/list.ts';
+import {ToDo, TYPE_TODO} from './store/todo.ts';
 import 'wired-input';
 import 'wired-fab'
 // @ts-ignore
@@ -29,15 +30,6 @@ class HoarderApp extends connect(store)(LitElement) {
         super();
         this._init();
     }
-
-    // protected updated(_changedProperties: any) {
-    //     console.log("updated", this);
-    //     // @ts-ignore
-    //     let elements = this.shadowRoot.querySelectorAll("button.edit-list-button");
-    //     console.log("Elements:", elements);
-    //     Array.from(elements)
-    //         .map(e => e.addEventListener('click', this._editList.bind(e)));
-    // }
 
     static get properties() {
         return {
@@ -74,6 +66,7 @@ class HoarderApp extends connect(store)(LitElement) {
                             this._sync_changed.bind(this),
                             this._sync_error.bind(this));
                         this.db_initialized = true;
+                        // Router.go("/view/1601816431143-YNvZSKq-iEHLRXS3y2Qgu");
                     })
             })
             .catch((response: any) => {
@@ -208,7 +201,7 @@ class HoarderApp extends connect(store)(LitElement) {
     }
 
     render() {
-        console.log("rendering list-view.ts");
+        console.log("rendering app.ts");
         return html`
                     <div class="center-div">
                         ${this.db_initialized
@@ -216,7 +209,7 @@ class HoarderApp extends connect(store)(LitElement) {
                                     <div class="todo-lists-list">
                                       ${this.state.lists.map((list:List) => html`
                                         <div @click="${this._gotoList}" class="list-item" .list-id="${list._id}">
-                                            <i class="material-icons">list</i>
+                                            <i class="material-icons">format_list_bulleted</i>
                                             ${this.editing === list._id 
                                                 ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" 
                                                         value="${list.text}"/>`

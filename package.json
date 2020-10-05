@@ -46,6 +46,7 @@
     "pwa-helpers": "^0.9.1",
     "redux": "^4.0.5",
     "wired-checkbox": "^2.1.0",
+    "wired-divider": "^2.1.0",
     "wired-fab": "^2.1.0",
     "wired-input": "^2.1.1",
     "workbox-precaching": "^5.1.4"

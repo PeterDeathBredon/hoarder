@@ -4,16 +4,20 @@ import componentStyle from './component-todo-list.sass';
 // @ts-ignore
 import {ToDo} from './store/todo.ts'
 import './todoitem.ts'
+import 'wired-divider';
+import {Router} from "@vaadin/router";
 
 @customElement('todo-list')
 export class TodoList extends LitElement {
 
     todos: Array<ToDo>;
     showFinished: Boolean;
+    listHeader: string = "";
 
     static get properties() {
         return {
             todos: {type: Array},
+            listHeader: {type: String},
             showFinished: {type: Boolean}
         }
     }
@@ -21,6 +25,7 @@ export class TodoList extends LitElement {
     constructor() {
         super();
         this.showFinished = false;
+        this.listHeader = "None";
     }
 
     static get styles() {
@@ -28,18 +33,33 @@ export class TodoList extends LitElement {
         return componentStyle;
     }
 
+    _back() {
+        Router.go("/");
+    }
+
 
     render() {
         console.log(this.showFinished);
         const filteredTodos = this.todos.filter(todo => (this.showFinished && todo.finished) || !todo.finished);
 
-        return (filteredTodos.length || 0) > 0  ? html`
+        return html`
             <div class="list">
-              ${filteredTodos.map(todo => html`<todo-item id="${todo._id}" .todo=${todo}></todo-item>`)} 
+                <div class="heading-container">
+                    <wired-divider></wired-divider>
+                    <div class="icon-with-text">
+                      <i @click="${this._back}" class="material-icons">arrow_back_ios</i><div class="list-title">${this.listHeader}</div>
+                    </div>
+                    <wired-divider style="top: 2em"></wired-divider>
+                </div>
+                ${(filteredTodos.length || 0) > 0  
+                    ? filteredTodos.map(todo => html`<todo-item id="${todo._id}" .todo=${todo}></todo-item>`)
+                    : html`<div><p style="text-align: center">We\'re safe. We hoarded everything!<br>(Or is the list just empty?)</p></div>`
+                }
+                 
             </div>
             <div id="end-of-list"></div>
-            <div id="after-end-of-list"></div>
-        ` : html`<p style="text-align: center">We\'re safe. We hoarded everything!<br>(Or is the list just empty?)</p>`;
+            <div id="after-end-of-list"></div>`
+        ;
     }
 
     protected updated(_changedProperties: PropertyValues) {
