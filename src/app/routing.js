@@ -8,6 +8,7 @@ export function registerRoutes(appContainer) {
         {path: '/', component: 'hoarder-app'},
         {path: '/index.html', component: 'hoarder-app'},
         {path: '/view/:id', component: 'list-view'},
+        {path: '/attachmentsfor/:id', component: 'attachment-view'},
         {path: '(.*)', component: 'no-route'}
     ]);
 }

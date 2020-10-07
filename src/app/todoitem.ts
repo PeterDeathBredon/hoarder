@@ -13,6 +13,7 @@ import {changeTodo, deleteTodo} from './store/actions.ts'
 // @ts-ignore
 import {db} from './store/db.ts'
 import {nanoid, random} from "nanoid";
+import {Router} from "@vaadin/router";
 
 
 @customElement('todo-item')
@@ -90,6 +91,9 @@ class TodoItem extends LitElement {
 
     }
 
+    _showAttachments() {
+        Router.go(`/attachmentsfor/${this.todo._id}`);
+    }
 
     updated() {
         if (this.todo.inEditMode) {
@@ -103,9 +107,14 @@ class TodoItem extends LitElement {
         const valuestrEdit = html`<wired-input style="color: black;font-weight: bold" id="edit-text" value="${this.todo.text}" 
                                                .autofocus></wired-input>
                          <wired-fab  
-                            @click=${this._editOk}><i class="material-icons md-light">done</i></wired-fab>
+                            @click=${this._editOk}><i class="material-icons md-light">done</i>
+                         </wired-fab>
                          <wired-fab
-                            @click=${this._removeTodo}><i class="material-icons md-light">delete</i></wired-fab>`
+                            @click=${this._removeTodo}><i class="material-icons md-light">delete</i>
+                         </wired-fab>
+                        <wired-fab
+                            @click=${this._showAttachments}><i class="material-icons md-light">attach_file</i>
+                        </wired-fab>`
         const valuestrNormal = html`<span style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
                         @click=${(e: Event) => this._toEditMode(<Event>e)}>${this.todo.text || 'whatchamacallit'}</span>`
 

@@ -53,7 +53,7 @@ export class TodoList extends LitElement {
                 </div>
                 ${(filteredTodos.length || 0) > 0  
                     ? filteredTodos.map(todo => html`<todo-item id="${todo._id}" .todo=${todo}></todo-item>`)
-                    : html`<div><p style="text-align: center">We\'re safe. We hoarded everything!<br>(Or is the list just empty?)</p></div>`
+                    : html`<div style="width: 100%"><p style="text-align: center"><p>All is hoarded!</p></div>`
                 }
                  
             </div>

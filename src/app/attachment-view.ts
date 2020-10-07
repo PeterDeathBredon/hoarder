@@ -1,5 +1,7 @@
 import {customElement, html, LitElement} from 'lit-element';
 // @ts-ignore
+import componentStyle from './component-todo-list.sass';
+// @ts-ignore
 import appStyle from './component_app.sass';
 // @ts-ignore
 import {ToDo, TYPE_TODO} from './store/todo.ts';
@@ -17,36 +19,39 @@ import {db, remoteCouch, sync} from './store/db.ts'
 import {State} from './store/reducer.ts'
 // @ts-ignore
 import {router} from './routing.js'
+import {Router} from "@vaadin/router";
 // @ts-ignore
+import 'wired-divider';
 
-@customElement('list-view')
-class ListView extends connect(store)(LitElement) {
-    state: State;
+
+@customElement('attachment-view')
+class AttachmentView extends connect(store)(LitElement) {
     db_initialized: boolean = false;
     sync_status: string = '';
     showSyncButton: boolean = false;
-    listHeader: string;
-    listId: string;
+    todoTitle: string;
+    todoId: string;
+    todoListId: string;
     location: Object;
 
     static get properties() {
         return {
-            state: {type: State},
             sync_status: {type: String},
             db_initialized: {type: Boolean},
             showSyncButton: {type: Boolean},
-            listHeader: {type: String}
+            attachments: {type: Array},
+            todoTitle: {type: String}
         }
     }
 
     static get styles() {
-        return appStyle
+        return [appStyle, componentStyle];
     }
 
     onAfterEnter(location: any, commands:any , router: any) {
         try {
             this.location = router.location;
-            this.listId = router.location.params.id;
+            this.todoId = router.location.params.id;
         } catch (err) {
             console.log(err);
         }
@@ -55,22 +60,25 @@ class ListView extends connect(store)(LitElement) {
     }
 
     _init() {
-        db.get(this.listId)
+        db.get(this.todoId)
             .then((response: any) => {
-            this.listHeader = response.text;
+            this.todoTitle = (<ToDo>response).text;
+            this.todoListId = (<ToDo>response).idList;
+
+            console.log("todo title is", this.todoTitle);
         })
 
-        console.log("listHeader is", router.location.params.id);
+        console.log("todoId is", this.todoId);
 
-        db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
+        db.query('todos', {key: [TYPE_TODO, this.todoId], include_docs: true})
             .then((response: any) => {
-                let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
-                store.dispatch(initList(todos));
-                this.sync_status = 'collaborating...';
-                sync(remoteCouch,
-                    this._sync_changed.bind(this),
-                    this._sync_error.bind(this));
+                // let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
+                // store.dispatch(initList(todos));
+                // sync(remoteCouch,
+                //     this._sync_changed.bind(this),
+                //     this._sync_error.bind(this));
                 this.db_initialized = true;
+                console.log("db initialized!");
             })
             .catch((response: any) => {
                 console.log(response);
@@ -79,18 +87,15 @@ class ListView extends connect(store)(LitElement) {
 
     _reload() {
         console.log('reloading...');
-        let inEditMode = this.state.todos.filter((todo: ToDo) => todo.inEditMode);
-        if (inEditMode.length > 0)
-            return
 
-        db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
-            .then((response: any) => {
-                let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
-                store.dispatch(initList(todos));
-            })
-            .catch((response: any) => {
-                console.log('error fetching all docs:', response);
-            });
+        // db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
+        //     .then((response: any) => {
+        //         let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
+        //         store.dispatch(initList(todos));
+        //     })
+        //     .catch((response: any) => {
+        //         console.log('error fetching all docs:', response);
+        //     });
     }
 
     _sync_error(err: {}) {
@@ -106,65 +111,53 @@ class ListView extends connect(store)(LitElement) {
     }
 
     stateChanged(state: State) {
-        this.state = state;
-    }
-
-    _addTodo() {
-        let todo = new ToDo("", false, true, this.listId);
-        store.dispatch(addTodo(todo));
-        // db.put(todo)
-        //     .then((response: Object) => {
-        //         store.dispatch(addTodo(todo));
-        //     })
-        //     .catch((err: Object) => {
-        //         console.log(err);
-        //     });
-    }
-
-    _filter() {
-        store.dispatch(toggleFilter());
-    }
-
-    _test() {
-        db.allDocs({include_docs: true}).then((response: any) => {
-            console.log(response);
-        }).catch((response: any) => {
-            console.log(response);
+        const todos = state.todos.filter((todo : ToDo) => {
+            todo._id = this.todoId
         });
+        if (todos.length == 1) {
+            this.todoTitle = todos[0].text;
+        }
+    }
+
+    _back() {
+        Router.go(`/view/${this.todoListId}`);
     }
 
     render() {
-        console.log("rendering list-view.ts");
-        let filterButtonStyle = this.state.showFinished ?
-            "--wired-fab-bg-color: var(--hoarder-show-finished-color)" :
-            "--wired-fab-bg-color: var(--hoarder-omit-finished-color)";
-        // let filterButtonStyle = `--wired-fab-bg-color: red`;
+        console.log("rendering attachment-view.ts");
         return html`
                     <div class="center-div">
                         
                         ${this.db_initialized
-            ? html`             
-                                <todo-list .showFinished=${this.state.showFinished} .todos=${this.state.todos} 
-                                    .listHeader="${this.listHeader}">    
-                                </todo-list>
+            ? html`
+                                <div class="list">
+                                    <div class="heading-container">
+                                        <wired-divider></wired-divider>
+                                        <div class="icon-with-text">
+                                          <i @click="${this._back}" class="material-icons">arrow_back_ios</i>
+                                          <div class="list-title">${this.todoTitle}</div>
+                                        </div>
+                                        <wired-divider style="top: 2em"></wired-divider>
+                                    </div>
+                                </div>
+                                <div id="end-of-list"></div>
+                                <div id="after-end-of-list"></div>
+                                             
                                 <div class="button-list">
                                     <wired-fab id="add-button" 
-                                        @click=${this._addTodo}><i class="material-icons">add_shopping_cart</i>
+                                        ><i class="material-icons">add_a_photo</i>
                                     </wired-fab>
                                     <wired-fab id="sync-button" 
                                         @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
                                     </wired-fab>
-                                    <wired-fab id="cleanup-button" 
-                                        @click=${this._filter} style="${filterButtonStyle}"><i class="material-icons">rule</i>
-                                    </wired-fab>
                                 </div>`
-            : html`<div class="loading">let's see what we need ...</div>`}
+            : html`<div class="loading">fetching attachments ...</div>`}
                     </div>
                     `
     }
 
     _installSyncEvents() {
-        const appContainer = document.getElementsByTagName("list-view")[0];
+        const appContainer = document.getElementsByTagName("attachment-view")[0];
         appContainer.addEventListener("sync-error", () => {
             console.log("sync error");
             this._heartbeat();

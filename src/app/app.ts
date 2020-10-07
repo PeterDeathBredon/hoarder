@@ -3,7 +3,6 @@ import {customElement, html, LitElement} from 'lit-element';
 import appStyle from './component_app.sass';
 // @ts-ignore
 import {List, TYPE_LIST} from './store/list.ts';
-import {ToDo, TYPE_TODO} from './store/todo.ts';
 import 'wired-input';
 import 'wired-fab'
 // @ts-ignore
