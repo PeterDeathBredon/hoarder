@@ -2,21 +2,26 @@ import {customElement, html, LitElement} from 'lit-element';
 // @ts-ignore
 import appStyle from './component_app.sass';
 // @ts-ignore
-import {ToDo, TYPE_TODO} from './store/todo.ts';
-import './todolist.ts'
-import 'wired-input';
+import listStyle from './component-todo-list.sass';
 
+// @ts-ignore
+import {ToDo, TYPE_TODO} from './store/todo.ts';
+// import './todolist.ts'
+import 'wired-input';
+// @ts-ignore
+import './todoitem.ts'
 // @ts-ignore
 import {store} from './store/store.ts';
 import {connect} from 'pwa-helpers/connect-mixin';
 // @ts-ignore
-import {addTodo, initList, toggleFilter} from './store/actions.ts'
+import {addTodo, changeTodo, deleteTodo, initList, toggleFilter} from './store/actions.ts'
 // @ts-ignore
 import {db, remoteCouch, sync} from './store/db.ts'
 // @ts-ignore
 import {State} from './store/reducer.ts'
 // @ts-ignore
 import {router} from './routing.js'
+import {Router} from "@vaadin/router";
 // @ts-ignore
 
 @customElement('list-view')
@@ -28,19 +33,28 @@ class ListView extends connect(store)(LitElement) {
     listHeader: string;
     listId: string;
     location: Object;
+    todosInEditState: Array<ToDo> = [];
 
     static get properties() {
         return {
             state: {type: State},
+            // newTodos: {type: Array},
             sync_status: {type: String},
             db_initialized: {type: Boolean},
             showSyncButton: {type: Boolean},
-            listHeader: {type: String}
+            listHeader: {type: String},
+            todosInEditState: {type: Array}
         }
     }
 
     static get styles() {
-        return appStyle
+        return [appStyle, listStyle];
+    }
+
+    stateChanged(state: State) {
+        console.log(`list-view.stateChanged: ${state}`);
+        this.state = state;
+
     }
 
     onAfterEnter(location: any, commands:any , router: any) {
@@ -50,6 +64,7 @@ class ListView extends connect(store)(LitElement) {
         } catch (err) {
             console.log(err);
         }
+        store.dispatch(initList([]));
         this._init();
         this._installSyncEvents();
     }
@@ -66,10 +81,10 @@ class ListView extends connect(store)(LitElement) {
             .then((response: any) => {
                 let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
                 store.dispatch(initList(todos));
-                this.sync_status = 'collaborating...';
-                sync(remoteCouch,
-                    this._sync_changed.bind(this),
-                    this._sync_error.bind(this));
+                // this.sync_status = 'collaborating...';
+                // sync(remoteCouch,
+                //     this._sync_changed.bind(this),
+                //     this._sync_error.bind(this));
                 this.db_initialized = true;
             })
             .catch((response: any) => {
@@ -79,13 +94,16 @@ class ListView extends connect(store)(LitElement) {
 
     _reload() {
         console.log('reloading...');
-        let inEditMode = this.state.todos.filter((todo: ToDo) => todo.inEditMode);
-        if (inEditMode.length > 0)
-            return
+        // let inEditMode = this.state.todos.filter((todo: ToDo) => todo.inEditMode);
+        // if (inEditMode.length > 0) {
+        //     console.log("list-view._reload can't be done because of ", inEditMode);
+        //     return
+        // }
 
         db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
             .then((response: any) => {
                 let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
+                console.log("_reload with", todos);
                 store.dispatch(initList(todos));
             })
             .catch((response: any) => {
@@ -105,21 +123,76 @@ class ListView extends connect(store)(LitElement) {
         this._reload();
     }
 
-    stateChanged(state: State) {
-        this.state = state;
-    }
 
     _addTodo() {
+        console.log("adding a todo.")
         let todo = new ToDo("", false, true, this.listId);
-        store.dispatch(addTodo(todo));
-        // db.put(todo)
-        //     .then((response: Object) => {
-        //         store.dispatch(addTodo(todo));
-        //     })
-        //     .catch((err: Object) => {
-        //         console.log(err);
-        //     });
+        this.todosInEditState = [...this.todosInEditState, todo]
     }
+
+    _editTodo(e: CustomEvent) {
+        console.log("list-view._editTodo", e.detail);
+        const todo: ToDo = this.state.todos.find((todo: ToDo) => todo._id === (<ToDo>e.detail)._id);
+        if (typeof(todo) != "undefined") {
+            this.todosInEditState = [...this.todosInEditState, todo];
+        }
+        else
+            alert("Error editing ToDo");
+    }
+
+    _isInEditState(todo: ToDo) {
+        return !!this.todosInEditState.find(t => t._id === todo._id);  //!! converts to true or false
+    }
+
+    _toDoItemChanged(event: CustomEvent) {
+        console.log("list-view._toDoItemChanged: ", event.detail);
+        event.stopPropagation();
+        let aNewOne = false;
+        const todo = <ToDo>event.detail;
+        const updatedTodo = {...new ToDo(), ...todo};
+        if (this._isInEditState(todo)) {
+            this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id)
+            aNewOne = (todo._rev === undefined);
+        }
+
+        db.put(updatedTodo)
+            .then((response: any) => {
+                updatedTodo._rev = response.rev;
+                if (aNewOne)
+                    store.dispatch(addTodo(updatedTodo))
+                else
+                    store.dispatch(changeTodo(updatedTodo));
+            })
+            .catch((response: any) => {
+                alert(response);
+                store.dispatch(changeTodo(updatedTodo));
+            });
+    }
+
+    _removeTodo(e: CustomEvent) {
+        const todo = <ToDo> e.detail;
+
+        e.stopPropagation();
+        console.log("list-view._removeTodo");
+        if (typeof todo._rev === 'undefined') {
+            console.log("That was a new one: ", todo);
+            this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id);
+            return
+        }
+
+        db.get(todo._id)
+            .then((doc: any) => {
+                db.remove(doc)
+                    .then((response: any) => {
+                        store.dispatch(deleteTodo(todo));
+                    })
+            })
+            .catch((err: any) => {
+                console.log(err);
+                store.dispatch(deleteTodo(todo));
+            })
+    }
+
 
     _filter() {
         store.dispatch(toggleFilter());
@@ -133,6 +206,45 @@ class ListView extends connect(store)(LitElement) {
         });
     }
 
+    _back() {
+        Router.go("/");
+    }
+
+    _renderList() {
+        console.log("rendering todolist", this.state.todos);
+
+        const todosNotInEditState = this.state.todos.filter((todo: ToDo) => !this._isInEditState(todo))
+        const todos=[...todosNotInEditState, ...this.todosInEditState]
+        const filteredTodos = todos.filter((todo: ToDo) => (this.state.showFinished && todo.finished)
+                                                        || !todo.finished).sort((a,b) => a._id.localeCompare(b._id) );
+
+        return html`
+            <div class="list">
+                <div class="heading-container">
+                    <wired-divider></wired-divider>
+                    <div class="icon-with-text">
+                      <i @click="${this._back}" class="material-icons">arrow_back_ios</i><div class="list-title">${this.listHeader}</div>
+                    </div>
+                    <wired-divider style="top: 2em"></wired-divider>
+                </div>
+                ${(filteredTodos.length || 0) > 0
+                    ? filteredTodos.map((todo: ToDo) =>
+                        html`<todo-item 
+                                .todo=${todo} 
+                                .inEditMode=${this._isInEditState(todo)}
+                                @todo-item-changed=${this._toDoItemChanged}  
+                                @todo-item-deleted=${this._removeTodo} 
+                                @todo-item-edit=${this._editTodo}>
+                             </todo-item>`
+                    )
+                    : html`<div style="width: 100%"><p style="text-align: center"><p>All is hoarded!</p></div>`
+                }
+            </div>
+            <div id="end-of-list"></div>
+            <div id="after-end-of-list"></div>
+        `
+    }
+
     render() {
         console.log("rendering list-view.ts");
         let filterButtonStyle = this.state.showFinished ?
@@ -140,27 +252,27 @@ class ListView extends connect(store)(LitElement) {
             "--wired-fab-bg-color: var(--hoarder-omit-finished-color)";
         // let filterButtonStyle = `--wired-fab-bg-color: red`;
         return html`
-                    <div class="center-div">
-                        
-                        ${this.db_initialized
-            ? html`             
-                                <todo-list .showFinished=${this.state.showFinished} .todos=${this.state.todos} 
-                                    .listHeader="${this.listHeader}">    
-                                </todo-list>
-                                <div class="button-list">
-                                    <wired-fab id="add-button" 
-                                        @click=${this._addTodo}><i class="material-icons">add_shopping_cart</i>
-                                    </wired-fab>
-                                    <wired-fab id="sync-button" 
-                                        @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
-                                    </wired-fab>
-                                    <wired-fab id="cleanup-button" 
-                                        @click=${this._filter} style="${filterButtonStyle}"><i class="material-icons">rule</i>
-                                    </wired-fab>
-                                </div>`
-            : html`<div class="loading">let's see what we need ...</div>`}
-                    </div>
-                    `
+            <div class="center-div">
+                ${this.db_initialized
+                ? html`             
+                    ${this._renderList()}            
+                    <div class="button-list">
+                        <wired-fab id="add-button" 
+                            @click=${this._addTodo}><i class="material-icons">add_shopping_cart</i>
+                        </wired-fab>
+                        <wired-fab id="sync-button" 
+                            @click=${this._sync} 
+                            style="${this.showSyncButton 
+                                     ? '--wired-fab-bg-color: #ff0000' 
+                                     : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}">
+                            <i class="material-icons">sync</i>
+                        </wired-fab>
+                        <wired-fab id="cleanup-button" 
+                            @click=${this._filter} style="${filterButtonStyle}"><i class="material-icons">rule</i>
+                        </wired-fab>
+                    </div>`
+                : html` <div class="loading">let's see what we need ...</div>`}
+            </div>`
     }
 
     _installSyncEvents() {

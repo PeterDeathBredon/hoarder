@@ -19,10 +19,18 @@ import {Router} from "@vaadin/router";
 @customElement('todo-item')
 class TodoItem extends LitElement {
     todo: ToDo;
+    inEditMode: Boolean;
+    private _instance_id: string;
+
+    constructor() {
+        super();
+        this._instance_id = nanoid();
+    }
 
     static get properties() {
         return {
-            todo: {type: ToDo},
+            todo: {type: Object},
+            inEditMode: {type: Boolean}
         }
     }
 
@@ -32,79 +40,61 @@ class TodoItem extends LitElement {
     }
 
     _removeTodo(e: Event) {
-        db.get(this.todo._id)
-            .then((doc: any) => {
-                db.remove(doc)
-                    .then((response: any) => {
-                        store.dispatch(deleteTodo(this.todo));
-                    })
-            })
-            .catch((err: any) => {
-                console.log(err);
-                store.dispatch(deleteTodo(this.todo));
-            })
+        console.log("todoitem._removeTodo");
+        this.dispatchEvent(new CustomEvent("todo-item-deleted",
+            {bubbles: true, composed: true, detail: this.todo}));
     }
 
     _changeTodoFinished(e: Event, todo: ToDo) {
         this.todo.finished = (<HTMLInputElement>e.target).checked;
-        if (!this._updateTodo()) {
-            this.todo = {...this.todo,
-            };
-        }
-        this._notifyUpdate();
-    }
-
-    _editOk(e: Event) {
-        if (this._updateTodo())
+        if (this.inEditMode)
+            this._updateTodo();
+        else
             this._notifyUpdate();
     }
 
-    _notifyUpdate() {
-        const updatedTodo = {...new ToDo(), ...this.todo};
-        db.put(updatedTodo)
-            .then((response: any) => {
-                store.dispatch(changeTodo(updatedTodo));
-            })
-            .catch((response: any) => {
-                console.log(response);
-            });
-
-    }
-
-    _toEditMode(e: Event) {
-        if (!this.todo.inEditMode) {
-            this.todo = {...this.todo, inEditMode: true}
-        }
+    _editOk(e: Event) {
+        this._updateTodo()
     }
 
     _updateTodo() {
-        if (this.todo.inEditMode) {
-            const edit = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
-            this.todo = {
-                ...this.todo,
-                text: edit.value,
-                inEditMode: false
-            };
-            return true;
-        } else
-            return false;
-
+        if (this.inEditMode) {
+            // const edit = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
+            const edit = <HTMLInputElement>(this.shadowRoot.querySelector("wired-input"));
+            this.todo.text = edit.value;
+            this._notifyUpdate();
+        }
     }
+
+    _notifyUpdate() {
+        this.dispatchEvent(new CustomEvent("todo-item-changed",
+            {bubbles: true, composed: true, detail: this.todo}));
+    }
+
+    _toEditMode(e: Event) {
+        this.dispatchEvent(new CustomEvent("todo-item-edit",
+            {bubbles: true, composed: true, detail: this.todo}));
+    }
+
 
     _showAttachments() {
         Router.go(`/attachmentsfor/${this.todo._id}`);
     }
 
     updated() {
-        if (this.todo.inEditMode) {
-            const el = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
+        console.log(`todoitem.updated: ${this.todo.text}`);
+        const checkbox : HTMLInputElement = this.shadowRoot.querySelector("wired-checkbox");
+        checkbox.checked = this.todo.finished;
+        if (this.inEditMode) {
+            // const el = <HTMLInputElement>(this.shadowRoot.getElementById("edit-text"));
+            const el = <HTMLInputElement>(this.shadowRoot.querySelector("wired-input"));
             setTimeout(() => el.focus(), 0);
         }
     }
 
     render() {
         console.log(`rendering ${this.todo.text}: ${this.todo.finished}`);
-        const valuestrEdit = html`<wired-input style="color: black;font-weight: bold" id="edit-text" value="${this.todo.text}" 
+        const valuestrEdit = html`<wired-input style="color: black;font-weight: bold" value="${this.todo.text}" 
                                                .autofocus></wired-input>
                          <wired-fab  
                             @click=${this._editOk}><i class="material-icons md-light">done</i>
@@ -116,18 +106,27 @@ class TodoItem extends LitElement {
                             @click=${this._showAttachments}><i class="material-icons md-light">attach_file</i>
                         </wired-fab>`
         const valuestrNormal = html`<span style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
-                        @click=${(e: Event) => this._toEditMode(<Event>e)}>${this.todo.text || 'whatchamacallit'}</span>`
+                        @click=${this._toEditMode}>${this.todo.text || 'whatchamacallit'}</span>`
 
         return (html`
             <div class="list-item"">
-                <wired-checkbox type="checkbox"
-                    .checked=${this.todo.finished}
+                <span>${this.inEditMode}</span>
+                <wired-checkbox type="checkbox" 
+                    .value=${this.todo.finished}
+                    .checked=${this.todo.finished} 
                     style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
                     @change=${(e: Event) => this._changeTodoFinished(<Event>e, this.todo)}  
                 ></wired-checkbox>
                 <div class="edit-and-buttons">
-                    ${this.todo.inEditMode ? valuestrEdit : valuestrNormal}
+                    ${this.inEditMode ? valuestrEdit : valuestrNormal}
+                    <p style="color:white; font-family: Courier;font-size: 18px">
+                        ${this.todo._id.substr(this.todo._id.length - 6)}
+                    </p>
+                    <p style="color:cornflowerblue; font-family: Courier;font-size: 18px">
+                        ${this._instance_id.substr(this._instance_id.length - 6)}
+                    </p>
                 </div>
+                
             </div>
             `)
     }

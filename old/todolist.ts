@@ -4,6 +4,7 @@ import componentStyle from './component-todo-list.sass';
 // @ts-ignore
 import {ToDo} from './store/todo.ts'
 import './todoitem.ts'
+
 import 'wired-divider';
 import {Router} from "@vaadin/router";
 
@@ -13,10 +14,12 @@ export class TodoList extends LitElement {
     todos: Array<ToDo>;
     showFinished: Boolean;
     listHeader: string = "";
+    inEditMode: Array<string> = []; //ids of todos that should be rendered in edit mode
 
     static get properties() {
         return {
             todos: {type: Array},
+            inEditMode: {type: Array},
             listHeader: {type: String},
             showFinished: {type: Boolean}
         }
@@ -33,13 +36,8 @@ export class TodoList extends LitElement {
         return componentStyle;
     }
 
-    _back() {
-        Router.go("/");
-    }
-
-
     render() {
-        console.log(this.showFinished);
+        console.log("rendering todolist", this.inEditMode);
         const filteredTodos = this.todos.filter(todo => (this.showFinished && todo.finished) || !todo.finished);
 
         return html`
@@ -52,7 +50,13 @@ export class TodoList extends LitElement {
                     <wired-divider style="top: 2em"></wired-divider>
                 </div>
                 ${(filteredTodos.length || 0) > 0  
-                    ? filteredTodos.map(todo => html`<todo-item id="${todo._id}" .todo=${todo}></todo-item>`)
+                    ? filteredTodos.map(todo => 
+                        this.inEditMode.indexOf(todo._id) < 0 
+                            ? html`<todo-item .todo=${todo} >
+                                   </todo-item>`
+                            : html`<span>!</span><todo-item .todo=${todo} ineditmode>
+                                   </todo-item>`
+                        )
                     : html`<div style="width: 100%"><p style="text-align: center"><p>All is hoarded!</p></div>`
                 }
                  
@@ -63,11 +67,11 @@ export class TodoList extends LitElement {
     }
 
     protected updated(_changedProperties: PropertyValues) {
-        if (this.todos.length > 0 && this.todos[this.todos.length - 1].inEditMode === true) {
-            const el = this.shadowRoot.getElementById("after-end-of-list");
-            console.log("todo element:", el);
-            el.scrollIntoView();
-        }
+        // if (this.todos.length > 0 && this.todos[this.todos.length - 1].inEditMode === true) {
+        //     const el = this.shadowRoot.getElementById("after-end-of-list");
+        //     console.log("todo element:", el);
+        //     el.scrollIntoView();
+        // }
         console.log("todolist updated");
         return super.updated(_changedProperties);
     }

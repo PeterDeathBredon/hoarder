@@ -5,17 +5,18 @@ import {List} from './list.ts'
 // @ts-ignore
 import {
     Action,
+    ADD_LIST,
     ADD_TODO,
     CHANGE_TODO,
     DEL_TODO,
-    INIT_LIST_VIEW,
     INIT_APP,
-    ADD_LIST,
+    INIT_LIST_VIEW,
     InitAction,
-    ToDoAction,
     ListInitAction,
-    TOGGLE_FILTER,
-    ListItemAction
+    ListItemAction,
+    ToDoAction,
+    TOGGLE_FILTER
+// @ts-ignore
 } from './actions.ts'
 
 export class State {
@@ -56,6 +57,11 @@ export const reducer = (state: State = INITIAL_STATE, action: Action): State => 
             console.log("reducer: CHANGE_TODO", (<ToDoAction>action).todo);
             const newTodo = (<ToDoAction>action).todo;
             let newState = {...state};
+            if (!state.todos.find(t => t._id === newTodo._id))
+                console.log(`!reducer: todo to change not found: ${newTodo._id}`)
+            else
+                console.log(`reducer: todo to change found: ${newTodo._id}`);
+
             newState.todos = state.todos.map((todo: ToDo) => {
                 return todo._id === newTodo._id ? {...newTodo} : {...todo}
             });

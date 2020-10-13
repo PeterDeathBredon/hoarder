@@ -15,6 +15,8 @@ import {db, remoteCouch, sync, init_db} from './store/db.ts'
 // @ts-ignore
 import {State} from './store/reducer.ts'
 import {Router} from "@vaadin/router";
+import "./list-view.ts"
+
 
 
 @customElement('hoarder-app')
@@ -61,9 +63,9 @@ class HoarderApp extends connect(store)(LitElement) {
                                     console.log("error adding default list", e);
                                 });
                         }
-                        sync(remoteCouch,
-                            this._sync_changed.bind(this),
-                            this._sync_error.bind(this));
+                        // sync(remoteCouch,
+                        //     this._sync_changed.bind(this),
+                        //     this._sync_error.bind(this));
                         this.db_initialized = true;
                         // Router.go("/view/1601816431143-YNvZSKq-iEHLRXS3y2Qgu");
                     })

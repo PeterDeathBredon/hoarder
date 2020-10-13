@@ -2,6 +2,7 @@ import {nanoid} from "nanoid";
 
 export class DbRecord{
     _id: string;
+    _rev: string = undefined;
     type: string;
 
     constructor(type: string, id: any = null) {

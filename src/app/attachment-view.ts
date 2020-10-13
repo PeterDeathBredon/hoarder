@@ -5,8 +5,8 @@ import componentStyle from './component-todo-list.sass';
 import appStyle from './component_app.sass';
 // @ts-ignore
 import {ToDo, TYPE_TODO} from './store/todo.ts';
-import './todolist.ts'
 import 'wired-input';
+
 
 // @ts-ignore
 import {store} from './store/store.ts';

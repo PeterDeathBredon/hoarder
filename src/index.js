@@ -1,5 +1,4 @@
 import "./app/attachment-view.ts"
-import "./app/list-view.ts"
 import "./app/app.ts"
 import "./app/component-undefined-route.ts"
 import "./app/styles.sass"
