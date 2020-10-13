@@ -174,9 +174,9 @@ class ListView extends connect(store)(LitElement) {
 
         e.stopPropagation();
         console.log("list-view._removeTodo");
+        this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id);
         if (typeof todo._rev === 'undefined') {
             console.log("That was a new one: ", todo);
-            this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id);
             return
         }
 
