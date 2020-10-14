@@ -9,10 +9,15 @@ module.exports = merge(baseConfig, {
     output: {
         filename: "[name].js"
     },
-    plugins: [new webpack.NormalModuleReplacementPlugin(
+    plugins: [
+        new webpack.NormalModuleReplacementPlugin(
         /credentials\.ts/,
         './dev-credentials.ts'
-    )],
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+            /lib\/const\.js/,
+            './lib/dev-const.js'
+        )],
     module: {
         rules: [
             {

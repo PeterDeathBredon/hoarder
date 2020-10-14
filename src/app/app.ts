@@ -16,7 +16,9 @@ import {db, remoteCouch, sync, init_db} from './store/db.ts'
 import {State} from './store/reducer.ts'
 import {Router} from "@vaadin/router";
 import "./list-view.ts"
-
+// @ts-ignore
+import {developMode} from './lib/const.js'
+import {TYPE_TODO} from "./store/todo";
 
 
 @customElement('hoarder-app')
@@ -26,9 +28,11 @@ class HoarderApp extends connect(store)(LitElement) {
     sync_status: string = '';
     showSyncButton: Boolean = false;
     editing: string = "";
+    _pouchDbSync: any = undefined;
 
     constructor() {
         super();
+        console.log("HoarderApp.constructor");
         this._init();
     }
 
@@ -46,10 +50,15 @@ class HoarderApp extends connect(store)(LitElement) {
         return appStyle
     }
 
+    disconnectedCallback() {
+        if (this._pouchDbSync) this._pouchDbSync.cancel();
+        super.disconnectedCallback();
+    }
+
     _init() {
         init_db()
             .then(() => {
-                db.query('lists',{key: TYPE_LIST, include_docs: true})
+                db.query('lists',{key: [TYPE_LIST, false], include_docs: true})
                     .then((response: any) => {
                         let lists = response.rows.map((row:any) => row.doc);
                         if (lists.length > 0) {
@@ -63,9 +72,9 @@ class HoarderApp extends connect(store)(LitElement) {
                                     console.log("error adding default list", e);
                                 });
                         }
-                        // sync(remoteCouch,
-                        //     this._sync_changed.bind(this),
-                        //     this._sync_error.bind(this));
+                        this._pouchDbSync = sync(remoteCouch,
+                            this._sync_changed.bind(this),
+                            this._sync_error.bind(this));
                         this.db_initialized = true;
                         // Router.go("/view/1601816431143-YNvZSKq-iEHLRXS3y2Qgu");
                     })
@@ -81,7 +90,7 @@ class HoarderApp extends connect(store)(LitElement) {
         // if (inEditMode.length > 0)
         //     return
 
-        db.query('lists',{key: TYPE_LIST, include_docs: true})
+        db.query('lists',{key: [TYPE_LIST, false], include_docs: true})
             .then((response: any) => {
                 let lists = response.rows.map((row:any) => row.doc);
                 store.dispatch(initApp(lists));
@@ -156,6 +165,7 @@ class HoarderApp extends connect(store)(LitElement) {
     }
 
     _removeList(e: Event) {
+        const removeId = this._getElementListId(<HTMLElement>e.target);
         e.stopPropagation();
         console.log(this._getElementListId(<HTMLElement>e.target));
         alert("not implemented!");
@@ -203,7 +213,9 @@ class HoarderApp extends connect(store)(LitElement) {
 
     render() {
         console.log("rendering app.ts");
-        return html`
+        return html`${developMode
+                    ? html`<div class="development">development mode</div>`
+                    : html``}
                     <div class="center-div">
                         ${this.db_initialized
                         ? html`

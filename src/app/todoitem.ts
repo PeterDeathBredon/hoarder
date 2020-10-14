@@ -14,6 +14,8 @@ import {changeTodo, deleteTodo} from './store/actions.ts'
 import {db} from './store/db.ts'
 import {nanoid, random} from "nanoid";
 import {Router} from "@vaadin/router";
+// @ts-ignore
+import {developMode} from './lib/const.js'
 
 
 @customElement('todo-item')
@@ -110,7 +112,7 @@ class TodoItem extends LitElement {
 
         return (html`
             <div class="list-item"">
-                <span>${this.inEditMode}</span>
+                ${developMode?html`<span>${this.inEditMode}</span>`:``}
                 <wired-checkbox type="checkbox" 
                     .value=${this.todo.finished}
                     .checked=${this.todo.finished} 
@@ -119,12 +121,13 @@ class TodoItem extends LitElement {
                 ></wired-checkbox>
                 <div class="edit-and-buttons">
                     ${this.inEditMode ? valuestrEdit : valuestrNormal}
-                    <p style="color:white; font-family: Courier;font-size: 18px">
-                        ${this.todo._id.substr(this.todo._id.length - 6)}
-                    </p>
-                    <p style="color:cornflowerblue; font-family: Courier;font-size: 18px">
-                        ${this._instance_id.substr(this._instance_id.length - 6)}
-                    </p>
+                    ${developMode?html`
+                        <p style="color:white; font-family: Courier;font-size: 18px">
+                            ${this.todo._id.substr(this.todo._id.length - 6)}
+                        </p>
+                        <p style="color:cornflowerblue; font-family: Courier;font-size: 18px">
+                            ${this._instance_id.substr(this._instance_id.length - 6)}
+                        </p>`:html``}
                 </div>
                 
             </div>

@@ -3,6 +3,8 @@ import {customElement, html, LitElement} from 'lit-element';
 import appStyle from './component_app.sass';
 // @ts-ignore
 import listStyle from './component-todo-list.sass';
+// @ts-ignore
+import {developMode} from './lib/const.js'
 
 // @ts-ignore
 import {ToDo, TYPE_TODO} from './store/todo.ts';
@@ -22,10 +24,14 @@ import {State} from './store/reducer.ts'
 // @ts-ignore
 import {router} from './routing.js'
 import {Router} from "@vaadin/router";
+import {nanoid} from "nanoid";
 // @ts-ignore
 
 @customElement('list-view')
 class ListView extends connect(store)(LitElement) {
+    private _instanceId: String;
+    private _pouchDbSync: any = undefined;
+
     state: State;
     db_initialized: boolean = false;
     sync_status: string = '';
@@ -35,14 +41,21 @@ class ListView extends connect(store)(LitElement) {
     location: Object;
     todosInEditState: Array<ToDo> = [];
 
+    constructor() {
+        super();
+        this._instanceId = nanoid();
+        this._instanceId = this._instanceId.substr(this._instanceId.length - 6)
+        console.log("ListView.constructor for instanceId", this._instanceId);
+    }
+
     static get properties() {
         return {
             state: {type: State},
             // newTodos: {type: Array},
             sync_status: {type: String},
-            db_initialized: {type: Boolean},
             showSyncButton: {type: Boolean},
             listHeader: {type: String},
+            listId: {type: String},
             todosInEditState: {type: Array}
         }
     }
@@ -52,7 +65,7 @@ class ListView extends connect(store)(LitElement) {
     }
 
     stateChanged(state: State) {
-        console.log(`list-view.stateChanged: ${state}`);
+        console.log(`list-view.stateChanged: ${state} in list ${this.listHeader}`);
         this.state = state;
 
     }
@@ -70,30 +83,38 @@ class ListView extends connect(store)(LitElement) {
     }
 
     _init() {
-        db.get(this.listId)
-            .then((response: any) => {
-            this.listHeader = response.text;
-        })
+        if (!this.db_initialized) {
+            db.get(this.listId)
+                .then((response: any) => {
+                    this.listHeader = response.text;
+                })
 
-        console.log("listHeader is", router.location.params.id);
+            console.log("listHeader is", router.location.params.id);
 
-        db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
-            .then((response: any) => {
-                let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
-                store.dispatch(initList(todos));
-                // this.sync_status = 'collaborating...';
-                // sync(remoteCouch,
-                //     this._sync_changed.bind(this),
-                //     this._sync_error.bind(this));
-                this.db_initialized = true;
-            })
-            .catch((response: any) => {
-                console.log(response);
-            });
+            db.query('todos', {key: [TYPE_TODO, this.listId], include_docs: true})
+                .then((response: any) => {
+                    let todos = response.rows.map((row: any) => {
+                        return {...new ToDo(), ...row.doc}
+                    })
+                    store.dispatch(initList(todos));
+                    this.sync_status = 'collaborating...';
+                    this._pouchDbSync = sync(remoteCouch,
+                        this._sync_changed.bind(this),
+                        this._sync_error.bind(this));
+                    this.db_initialized = true;
+                })
+                .catch((response: any) => {
+                    console.log(response);
+                });
+        }
+    }
+    disconnectedCallback() {
+        if (this._pouchDbSync) this._pouchDbSync.cancel();
+        super.disconnectedCallback();
     }
 
     _reload() {
-        console.log('reloading...');
+        console.log(`reloading list ${this.listId} in instance ${this._instanceId}`);
         // let inEditMode = this.state.todos.filter((todo: ToDo) => todo.inEditMode);
         // if (inEditMode.length > 0) {
         //     console.log("list-view._reload can't be done because of ", inEditMode);
@@ -117,9 +138,9 @@ class ListView extends connect(store)(LitElement) {
         this.dispatchEvent(new CustomEvent("sync-error", {bubbles: true, composed: true, detail: err}));
     }
 
-    _sync_changed(err: {}) {
-        console.log("data has changed remotely.", this);
-        this.dispatchEvent(new CustomEvent("sync-changed", {bubbles: true, composed: true, detail: err}));
+    _sync_changed(state: {}) {
+        console.log("data has changed remotely.", state);
+        this.dispatchEvent(new CustomEvent("sync-changed", {bubbles: true, composed: true, detail: state}));
         this._reload();
     }
 
@@ -150,13 +171,13 @@ class ListView extends connect(store)(LitElement) {
         let aNewOne = false;
         const todo = <ToDo>event.detail;
         const updatedTodo = {...new ToDo(), ...todo};
-        if (this._isInEditState(todo)) {
-            this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id)
-            aNewOne = (todo._rev === undefined);
-        }
 
         db.put(updatedTodo)
             .then((response: any) => {
+                if (this._isInEditState(todo)) {
+                    this.todosInEditState = this.todosInEditState.filter(t => t._id !== todo._id)
+                    aNewOne = (todo._rev === undefined);
+                }
                 updatedTodo._rev = response.rev;
                 if (aNewOne)
                     store.dispatch(addTodo(updatedTodo))
@@ -246,12 +267,17 @@ class ListView extends connect(store)(LitElement) {
     }
 
     render() {
-        console.log("rendering list-view.ts");
+        console.log(`rendering list-view.ts for List ${this.listHeader}, ${this.listId}`);
+        console.log(`instance ${this._instanceId} is rendering.`);
         let filterButtonStyle = this.state.showFinished ?
             "--wired-fab-bg-color: var(--hoarder-show-finished-color)" :
             "--wired-fab-bg-color: var(--hoarder-omit-finished-color)";
         // let filterButtonStyle = `--wired-fab-bg-color: red`;
         return html`
+            ${developMode
+            ? html`<div class="development">development mode</div>
+            <p class="development">${this._instanceId}</p>`
+            : html``}            
             <div class="center-div">
                 ${this.db_initialized
                 ? html`             
