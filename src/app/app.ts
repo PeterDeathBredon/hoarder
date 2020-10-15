@@ -163,8 +163,12 @@ class HoarderApp extends connect(store)(LitElement) {
 
     _editList(e: Event) {
         e.stopPropagation();
-        this.editing = this._getElementListId(<HTMLElement>e.target);
-        console.log(this.editing);
+        if (this.upForDeletion)
+            this.upForDeletion = "";
+        else {
+            this.editing = this._getElementListId(<HTMLElement>e.target);
+            console.log(this.editing);
+        }
     }
     _getListById(id: string) {
         return this.state.lists.find((l:List) => l._id === id)
@@ -182,6 +186,7 @@ class HoarderApp extends connect(store)(LitElement) {
             const updatedList = {...list};
             updatedList.finished = true;
             db.put(updatedList).then(() => {
+                this.upForDeletion = "";
                 store.dispatch(editList(updatedList));
             })
                 .catch(() => {
@@ -192,7 +197,9 @@ class HoarderApp extends connect(store)(LitElement) {
 
     _cancelDeletion(e: Event) {
         e.stopPropagation();
-        setTimeout(() => this.upForDeletion = "", 200);
+        if (this.upForDeletion) {
+            setTimeout(() => this.upForDeletion = "", 200);
+        }
     }
 
     _gotoList(e: Event) {
@@ -207,6 +214,9 @@ class HoarderApp extends connect(store)(LitElement) {
             console.log(listId);
             Router.go(`/view/${listId}`);
         }
+        if (this.upForDeletion)
+            this.upForDeletion = "";
+        e.stopPropagation();
     }
 
     _update_list_name(e: Event) {
@@ -240,7 +250,7 @@ class HoarderApp extends connect(store)(LitElement) {
         return html`${developMode
                     ? html`<div class="development">development mode</div>`
                     : html``}
-                    <div class="center-div">
+                    <div class="center-div" @click="${this._cancelDeletion}">
                         ${this.db_initialized
                         ? html`
                                     <div class="todo-lists-list">
