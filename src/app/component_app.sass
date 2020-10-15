@@ -86,18 +86,23 @@
     font-weight: bolder
     //text-shadow: 1px 1px black
 
-
   span
     display: inline-block
     margin-left: 1em
     width: 100%
+
+
+.about-to-go
+  background-color: var(--mdc-checkbox-unchecked-color)
+  transform: perspective(1000px) rotateY(-20deg) translate3d(-45px,0px,50px)
+  transition: transform .1s ease-in-out
 
 #edit-list
   width: 100%
   margin-right: 3em
   font-family: IndieFlower
   font-size: 1em
-.edit-list-button
+.edit-list-button, .bt-kill
   background: rgba(0,0,0,0)
   border: none
   margin: 0px 0px 0px 1em
@@ -111,6 +116,9 @@
    background: rgba(255,255,255,.5)
   &:active
     background: rgba(0,0,0,.5)
+.bt-kill
+  font-size: 1em
+
 #end-of-list
   height: 110px
   width: 100%

@@ -29,6 +29,7 @@ class HoarderApp extends connect(store)(LitElement) {
     showSyncButton: Boolean = false;
     editing: string = "";
     _pouchDbSync: any = undefined;
+    upForDeletion: string = "";
 
     constructor() {
         super();
@@ -42,6 +43,7 @@ class HoarderApp extends connect(store)(LitElement) {
             sync_status: {type: String},
             db_initialized: {type: Boolean},
             showSyncButton: {type: Boolean},
+            upForDeletion: {type: Boolean},
             editing: {type: String}
         }
     }
@@ -163,18 +165,39 @@ class HoarderApp extends connect(store)(LitElement) {
         this.editing = this._getElementListId(<HTMLElement>e.target);
         console.log(this.editing);
     }
+    _getListById(id: string) {
+        return this.state.lists.find((l:List) => l._id === id)
+    }
+
 
     _removeList(e: Event) {
         const removeId = this._getElementListId(<HTMLElement>e.target);
         e.stopPropagation();
-        console.log(this._getElementListId(<HTMLElement>e.target));
-        alert("not implemented!");
+        if (removeId !== this.upForDeletion) {
+            this.upForDeletion = removeId;
+            console.log(`List ${this.upForDeletion} is up for deletion.`);
+        } else {
+            const list = this._getListById(removeId);
+            const updatedList = {...list};
+            updatedList.finished = true;
+            db.put(updatedList).then(() => {
+                store.dispatch(editList(updatedList));
+            })
+                .catch(() => {
+                    alert("There was trouble saving this item.");
+                })
+        }
+    }
+
+    _cancelDeletion(e: Event) {
+        e.stopPropagation();
+        setTimeout(() => this.upForDeletion = "", 200);
     }
 
     _gotoList(e: Event) {
         console.log(this);
         let inputs = Array.from(this.shadowRoot.querySelectorAll("input"));
-        if (inputs.length === 0) {
+        if (inputs.length === 0 && this.upForDeletion === "") {
             // console.log("inputs", inputs)
             // console.log("target", e.target);
             // console.log("current target", e.currentTarget);
@@ -221,7 +244,10 @@ class HoarderApp extends connect(store)(LitElement) {
                         ? html`
                                     <div class="todo-lists-list">
                                       ${this.state.lists.map((list:List) => html`
-                                        <div @click="${this._gotoList}" class="list-item" .list-id="${list._id}">
+                                        <div @click=${this._gotoList} 
+                                             class="list-item 
+                                                    ${this.upForDeletion === list._id?'about-to-go':''}" 
+                                             .list-id="${list._id}">
                                             <i class="material-icons">format_list_bulleted</i>
                                             ${this.editing === list._id 
                                                 ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" 
@@ -230,7 +256,8 @@ class HoarderApp extends connect(store)(LitElement) {
                                             <button @click=${this._editList}" class="edit-list-button">
                                                 <i class="material-icons" .list-id="${list._id}">edit</i>
                                             </button>
-                                            <button @click=${this._removeList}" class="edit-list-button">
+                                            <button @click=${this._removeList}" @blur=${this._cancelDeletion}" 
+                                                    class="${this.upForDeletion === list._id?'bt-kill':'edit-list-button'}">
                                                 <i class="material-icons" .list-id="${list._id}">delete</i>
                                             </button>`}
                                             
