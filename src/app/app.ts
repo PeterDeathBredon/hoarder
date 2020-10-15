@@ -60,6 +60,7 @@ class HoarderApp extends connect(store)(LitElement) {
     _init() {
         init_db()
             .then(() => {
+                console.log("db initialized");
                 db.query('lists',{key: [TYPE_LIST, false], include_docs: true})
                     .then((response: any) => {
                         let lists = response.rows.map((row:any) => row.doc);

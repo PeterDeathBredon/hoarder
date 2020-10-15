@@ -12,8 +12,14 @@ export const db = new PouchDB('hoarder');
 
 async function putIndex(indexDefinition: Object, id: string) {
     let updateIndex = true;
+    let currentIndex = undefined;
 
-    let currentIndex = await db.get(id);
+    try {
+        let currentIndex = await db.get(id);
+    }
+    catch(e) {
+        console.log (`index ${id} will be created for the first fime.`)
+    }
     // @ts-ignore
     indexDefinition._id = id;
     if (currentIndex) {
@@ -42,7 +48,7 @@ export async function init_db() {
                 }
             }
         }
-        putIndex(list_index, '_design/lists');
+        await putIndex(list_index, '_design/lists');
 
     } catch (err) {
         console.log("error creating index 'lists'");
@@ -60,7 +66,7 @@ export async function init_db() {
                 }
             }
         }
-        putIndex(list_todos, '_design/todos');
+        await putIndex(list_todos, '_design/todos');
     } catch (err) {
         console.log("error creating index 'todos'");
     }
