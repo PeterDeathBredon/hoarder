@@ -95,7 +95,8 @@ class TodoItem extends LitElement {
     }
 
     render() {
-        console.log(`rendering ${this.todo.text}: ${this.todo.finished}`);
+        console.log('rendering', this.todo);
+
         const valuestrEdit = html`<wired-input style="color: black;font-weight: bold" value="${this.todo.text}" 
                                                .autofocus></wired-input>
                          <wired-fab  
@@ -105,7 +106,10 @@ class TodoItem extends LitElement {
                             @click=${this._removeTodo}><i class="material-icons md-light">delete</i>
                          </wired-fab>
                         <wired-fab
-                            @click=${this._showAttachments}><i class="material-icons md-light">attach_file</i>
+                            @click=${this._showAttachments}
+                            style="${"_attachments" in this.todo?"--wired-fab-bg-color: var(--hoarder-color-checked)":""}"
+                            >
+                            <i class="material-icons md-light">attach_file</i>
                         </wired-fab>`
         const valuestrNormal = html`<span style="${this.todo.finished ? "color:var(--hoarder-color-checked)" : "color:var(--hoarder-color-unchecked)"}"
                         @click=${this._toEditMode}>${this.todo.text || 'whatchamacallit'}</span>`
@@ -121,6 +125,9 @@ class TodoItem extends LitElement {
                 ></wired-checkbox>
                 <div class="edit-and-buttons">
                     ${this.inEditMode ? valuestrEdit : valuestrNormal}
+                    ${("_attachments" in this.todo && !this.inEditMode)
+                        ?html`<i class="material-icons" @click=${this._showAttachments}>attach_file</i>`
+                        :html``}
                     ${developMode?html`
                         <p style="color:white; font-family: Courier;font-size: 18px">
                             ${this.todo._id.substr(this.todo._id.length - 6)}
