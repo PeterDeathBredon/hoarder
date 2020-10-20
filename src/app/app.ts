@@ -20,6 +20,9 @@ import "./list-view.ts"
 import {developMode} from './lib/const.js'
 import {TYPE_TODO} from "./store/todo";
 
+(() => {
+    console.log("development mode is " + developMode.toString());
+})();
 
 @customElement('hoarder-app')
 class HoarderApp extends connect(store)(LitElement) {
@@ -51,6 +54,7 @@ class HoarderApp extends connect(store)(LitElement) {
     static get styles() {
         return appStyle
     }
+
 
     disconnectedCallback() {
         if (this._pouchDbSync) this._pouchDbSync.cancel();
@@ -238,11 +242,20 @@ class HoarderApp extends connect(store)(LitElement) {
         }, 100);
     }
 
+    protected firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
+        // if (developMode) {
+        //     console.log("rerouting...")
+        //     Router.go("/attachmentsfor/1602674359304-wu7l7v13SsQs2syy9ZzD1");
+        // }
+    }
+
     protected updated(_changedProperties: any) {
         super.updated(_changedProperties);
         if (this.editing !== "") {
             this.shadowRoot.getElementById("edit-list").focus();
         }
+
     }
 
     render() {
@@ -253,37 +266,37 @@ class HoarderApp extends connect(store)(LitElement) {
                     <div class="center-div" @click="${this._cancelDeletion}">
                         ${this.db_initialized
                         ? html`
-                                    <div class="todo-lists-list">
-                                      ${this.state.lists.map((list:List) => html`
-                                        <div @click=${this._gotoList} 
-                                             class="list-item 
-                                                    ${this.upForDeletion === list._id?'about-to-go':''}" 
-                                             .list-id="${list._id}">
-                                            <i class="material-icons">format_list_bulleted</i>
-                                            ${this.editing === list._id 
-                                                ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" 
-                                                        value="${list.text}"/>`
-                                                : html`<span>${list.text}</span>
-                                            <button @click=${this._editList}" class="edit-list-button">
-                                                <i class="material-icons" .list-id="${list._id}">edit</i>
-                                            </button>
-                                            <button @click=${this._removeList}" @blur=${this._cancelDeletion}" 
-                                                    class="${this.upForDeletion === list._id?'bt-kill':'edit-list-button'}">
-                                                <i class="material-icons" .list-id="${list._id}">delete</i>
-                                            </button>`}
-                                            
-                                        </div>`)} 
-                                        <div id="end-of-list"></div>
-                                    </div>
-                                        
-                                    <div class="button-list">
-                                        <wired-fab id="add-button" 
-                                            @click=${this._addList}><i class="material-icons">playlist_add</i>
-                                        </wired-fab>
-                                        <wired-fab id="sync-button" 
-                                            @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
-                                        </wired-fab>
-                                    </div>`
+                            <div class="todo-lists-list">
+                              ${this.state.lists.map((list:List) => html`
+                                <div @click=${this._gotoList} 
+                                     class="list-item 
+                                            ${this.upForDeletion === list._id?'about-to-go':''}" 
+                                     .list-id="${list._id}">
+                                    <i class="material-icons">format_list_bulleted</i>
+                                    ${this.editing === list._id 
+                                        ? html`<input @blur=${this._update_list_name} id="edit-list" type="text" 
+                                                value="${list.text}"/>`
+                                        : html`<span>${list.text}</span>
+                                    <button @click=${this._editList}" class="edit-list-button">
+                                        <i class="material-icons" .list-id="${list._id}">edit</i>
+                                    </button>
+                                    <button @click=${this._removeList}" @blur=${this._cancelDeletion}" 
+                                            class="${this.upForDeletion === list._id?'bt-kill':'edit-list-button'}">
+                                        <i class="material-icons" .list-id="${list._id}">delete</i>
+                                    </button>`}
+                                    
+                                </div>`)} 
+                                <div id="end-of-list"></div>
+                            </div>
+                                
+                            <div class="button-list">
+                                <wired-fab id="add-button" 
+                                    @click=${this._addList}><i class="material-icons">playlist_add</i>
+                                </wired-fab>
+                                <wired-fab id="sync-button" 
+                                    @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
+                                </wired-fab>
+                            </div>`
                         : html`<div class="loading">fetching lists ...</div>`}
                     </div>
                     `

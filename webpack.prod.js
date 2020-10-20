@@ -5,6 +5,7 @@ const {merge} = require('webpack-merge')
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const webpack = require("webpack");
 
 module.exports = merge(baseConfig, {
     mode: "production",
@@ -12,7 +13,13 @@ module.exports = merge(baseConfig, {
         filename: "[name]-[contentHash].js",
         path: path.resolve(__dirname, "dist")
     },
-    plugins: [new CleanWebpackPlugin(), new MiniCssExtractPlugin({
+    plugins: [
+        new webpack.NormalModuleReplacementPlugin(
+            /lib\/const\.js/,
+            './lib/production-const.js'
+        ),
+
+        new CleanWebpackPlugin(), new MiniCssExtractPlugin({
         filename: '[name]-[hash].css',
     })],
     module: {

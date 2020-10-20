@@ -3,7 +3,8 @@ import "./app/app.ts"
 import "./app/component-undefined-route.ts"
 import "./app/styles.sass"
 import "./assets/favicon.ico"
-import {registerRoutes} from "./app/routing";
+import {registerRoutes} from "./app/routing.js";
+import {Router} from "@vaadin/router";
 
 // import "./sw.js"
 
@@ -16,7 +17,6 @@ window.addEventListener("load", () => {
     console.log(window.location.toString());
     if (!window.location.toString().startsWith("https://192.168"))
         addServiceWorker();
-
 })
 
 function configureRouter() {

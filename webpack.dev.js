@@ -6,6 +6,12 @@ const {merge} = require('webpack-merge')
 module.exports = merge(baseConfig, {
     mode: "development",
     devtool: 'inline-source-map',
+    devServer: {
+        https: true,
+        historyApiFallback: {
+            index: "/src/reroute.html"
+        }
+    },
     output: {
         filename: "[name].js"
     },
@@ -14,10 +20,7 @@ module.exports = merge(baseConfig, {
         /credentials\.ts/,
         './dev-credentials.ts'
         ),
-        new webpack.NormalModuleReplacementPlugin(
-            /lib\/const\.js/,
-            './lib/dev-const.js'
-        )],
+    ],
     module: {
         rules: [
             {

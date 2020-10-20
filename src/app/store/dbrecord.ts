@@ -2,7 +2,8 @@ import {nanoid} from "nanoid";
 
 export class DbRecord{
     _id: string;
-    _rev: string = undefined;
+    _rev?: string | undefined;
+    _attachments?: any | undefined;
     type: string;
 
     constructor(type: string, id: any = null) {

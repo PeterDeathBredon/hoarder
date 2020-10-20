@@ -5,9 +5,6 @@ const WorkboxPlugin = require("workbox-webpack-plugin");
 const webpack = require("webpack");
 const path = require("path");
 module.exports = {
-    devServer: {
-        https: true
-    },
     entry: {
         main: "./src/index.js"
     },
@@ -61,6 +58,7 @@ module.exports = {
             },
             {
                 test: /\.html$/,
+                exclude: [path.resolve(__dirname, 'reroute.html')],
                 use: ['html-loader']
             },
             {

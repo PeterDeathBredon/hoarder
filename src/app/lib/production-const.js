@@ -1,1 +1,1 @@
-export const developMode = true;
+export const developMode = false;

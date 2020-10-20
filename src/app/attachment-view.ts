@@ -6,7 +6,7 @@ import appStyle from './component_app.sass';
 // @ts-ignore
 import {ToDo, TYPE_TODO} from './store/todo.ts';
 import 'wired-input';
-
+import './attachment-item.ts'
 
 // @ts-ignore
 import {store} from './store/store.ts';
@@ -22,7 +22,12 @@ import {router} from './routing.js'
 import {Router} from "@vaadin/router";
 // @ts-ignore
 import 'wired-divider';
+import {imgSrcToBlob} from "blob-util";
+import {nanoid} from "nanoid";
 
+interface IIndexableObject {
+    [key: string] : any;
+}
 
 @customElement('attachment-view')
 class AttachmentView extends connect(store)(LitElement) {
@@ -33,6 +38,8 @@ class AttachmentView extends connect(store)(LitElement) {
     todoId: string;
     todoListId: string;
     location: Object;
+    attachments: IIndexableObject = {};
+    markedId: String = "";
 
     static get properties() {
         return {
@@ -40,7 +47,8 @@ class AttachmentView extends connect(store)(LitElement) {
             db_initialized: {type: Boolean},
             showSyncButton: {type: Boolean},
             attachments: {type: Array},
-            todoTitle: {type: String}
+            todoTitle: {type: String},
+            markedId: {type: String}
         }
     }
 
@@ -62,27 +70,18 @@ class AttachmentView extends connect(store)(LitElement) {
     _init() {
         db.get(this.todoId)
             .then((response: any) => {
-            this.todoTitle = (<ToDo>response).text;
-            this.todoListId = (<ToDo>response).idList;
+                const todo: ToDo = response;
+                this.todoTitle = (<ToDo>response).text;
+                this.todoListId = (<ToDo>response).idList;
+                if ("_attachments" in todo) {
+                    this.attachments = todo._attachments;
+                }
 
-            console.log("todo title is", this.todoTitle);
+            console.log("todoId is", this.todoId);
+            console.log("attachments: ", this.attachments);
+            this.db_initialized = true;
+            console.log("db initialized!");
         })
-
-        console.log("todoId is", this.todoId);
-
-        db.query('todos', {key: [TYPE_TODO, this.todoId], include_docs: true})
-            .then((response: any) => {
-                // let todos = response.rows.map((row: any) => {return {... new ToDo(), ...row.doc}})
-                // store.dispatch(initList(todos));
-                // sync(remoteCouch,
-                //     this._sync_changed.bind(this),
-                //     this._sync_error.bind(this));
-                this.db_initialized = true;
-                console.log("db initialized!");
-            })
-            .catch((response: any) => {
-                console.log(response);
-            });
     }
 
     _reload() {
@@ -123,13 +122,90 @@ class AttachmentView extends connect(store)(LitElement) {
         Router.go(`/view/${this.todoListId}`);
     }
 
+    async _addFileToDb(file: File) {
+        const doc = await db.get(this.todoId);
+        const attachmentId = nanoid();
+        this.attachments[attachmentId] = await db.putAttachment(doc._id, attachmentId, doc._rev, file, file.type);
+        this.attachments = {...this.attachments}
+    }
+
+
+    _addFile(e: Event) {
+        const elFile = <HTMLInputElement>this.shadowRoot.querySelector("#add-file");
+        console.log(`new file ${elFile.files[0].name}`);
+        const file = elFile.files[0];
+        this._addFileToDb(file)
+            .then(() => {
+                console.log(`added image ${file.name}`);
+           })
+            .catch((err) => {
+                console.log(`Error adding file ${err}`);
+            })
+    }
+
+    _triggerAddFile(e: Event) {
+        const elFile = <HTMLInputElement> this.shadowRoot.querySelector("#add-file");
+        elFile.click.bind(elFile)();
+    }
+
+    _markAttachment(e: CustomEvent) {
+        console.log("marking ", e.detail);
+        if (this.markedId === e.detail)
+            this.markedId = ""
+        else
+            this.markedId = e.detail
+    }
+
+    async _deleteFileFromDb(attachmentId: string) {
+        const doc = await db.get(this.todoId);
+        if (attachmentId in doc._attachments) {
+            return await db.removeAttachment(doc._id, attachmentId, doc._rev);
+        } else {
+            console.log("attachment not found", doc);
+            return null;
+        }
+    }
+
+    _deleteAttachment(e: CustomEvent) {
+        console.log("deleting ", e.detail);
+        const attachmentId = e.detail;
+        this._deleteFileFromDb(attachmentId)
+        .then( (result) => {
+            if (result) {
+                console.log(`File ${e.detail} deleted:`, result);
+                delete this.attachments[attachmentId];
+                this.attachments = {...this.attachments}
+            }
+        })
+        .catch((err) => {
+            console.log(`Error adding file ${err}`);
+        })
+    }
+
+    _renderList() {
+        return html`${(Object.keys(this.attachments).length ) > 0
+            ? Object.keys(this.attachments).map((key: string) =>
+                html`<attachment-item 
+                        .todoId=${this.todoId}
+                        .attachmentId=${key}
+                        ?marked=${this.markedId === key}
+                        @mark-attachment=${this._markAttachment}
+                        @delete-attachment=${this._deleteAttachment}
+                        >
+                        
+                    </attachment-item>`)
+            : html`<div style="width: 100%"><p class="noimages">no images, yet.</p></div>`
+        }`
+    }
+
     render() {
+
         console.log("rendering attachment-view.ts");
         return html`
                     <div class="center-div">
                         
                         ${this.db_initialized
-            ? html`
+                          ? html`
                                 <div class="list">
                                     <div class="heading-container">
                                         <wired-divider></wired-divider>
@@ -140,19 +216,23 @@ class AttachmentView extends connect(store)(LitElement) {
                                         <wired-divider style="top: 2em"></wired-divider>
                                     </div>
                                 </div>
+                                ${this._renderList()}
                                 <div id="end-of-list"></div>
                                 <div id="after-end-of-list"></div>
                                              
                                 <div class="button-list">
-                                    <wired-fab id="add-button" 
-                                        ><i class="material-icons">add_a_photo</i>
+                                    <input type="file" id="add-file" accept="image/*" style="display:none"
+                                           @change=${this._addFile}>
+                                    <wired-fab id="add-button"   
+                                           @click=${this._triggerAddFile}>
+                                           <i class="material-icons">add_a_photo</i>
                                     </wired-fab>
                                     <wired-fab id="sync-button" 
                                         @click=${this._sync} style="${this.showSyncButton ? '--wired-fab-bg-color: #ff0000' : 'visibility:hidden; --wired-fab-bg-color: #ff0000'}"><i class="material-icons">sync</i>
                                     </wired-fab>
                                 </div>`
-            : html`<div class="loading">fetching attachments ...</div>`}
-                    </div>
+                          : html`<div class="loading">fetching attachments ...</div>`}
+                                </div>
                     `
     }
 
