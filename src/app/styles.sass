@@ -31,7 +31,7 @@ body
   font-size: 16px
   user-select: none
   box-sizing: border-box
-  padding-top: 100px
+  padding-top: 120px
   @media only screen and (max-width: 600px)
     padding-top: 70px
   padding-left: 10px
@@ -82,6 +82,20 @@ header
   font-family: Cabin, sans-serif
   font-size: .4em
   transform: translateX(-1.8em)
+
+#headline-container
+  display: grid
+  place-items: center
+  h1
+    transform: translatex(.2em)
+
+#sync-status
+  visibility: hidden
+  width: 20em
+  height: 20px
+  transform: translateX(-.8em)
+  background: #0776a2
+  text-align: center
 
 @keyframes creepy
   from

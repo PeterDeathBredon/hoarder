@@ -81,7 +81,13 @@ class HoarderApp extends connect(store)(LitElement) {
                         }
                         this._pouchDbSync = sync(remoteCouch,
                             this._sync_changed.bind(this),
-                            this._sync_error.bind(this));
+                            this._sync_error.bind(this),
+                            this._sync_complete.bind(this),
+                            this._sync_active.bind(this));
+
+                        this.dispatchEvent(new CustomEvent("sync-started",
+                            {bubbles: true, composed: true}));
+
                         this.db_initialized = true;
                         // Router.go("/view/1601816431143-YNvZSKq-iEHLRXS3y2Qgu");
                     })
@@ -111,12 +117,23 @@ class HoarderApp extends connect(store)(LitElement) {
         this.sync_status = 'alone for good.';
         console.log("error syncing", err);
         this.dispatchEvent(new CustomEvent("sync-error", {bubbles: true, composed: true, detail: err}));
+        this.showSyncButton = true;
     }
 
-    _sync_changed(err: {}) {
+    _sync_changed(info: {}) {
         console.log("data has changed remotely.", this);
-        this.dispatchEvent(new CustomEvent("sync-changed", {bubbles: true, composed: true, detail: err}));
+        this.dispatchEvent(new CustomEvent("sync-changed", {bubbles: true, composed: true, detail: info}));
         this._reload();
+    }
+
+    _sync_complete(info: {}) {
+        console.log("firing sync complete");
+        this.dispatchEvent(new CustomEvent("sync-complete", {bubbles: true, composed: true, detail: info}));
+    }
+
+    _sync_active(info: {}) {
+        console.log("sync active", this);
+        this.dispatchEvent(new CustomEvent("sync-active", {bubbles: true, composed: true, detail: info}));
     }
 
     stateChanged(state: State) {
@@ -304,27 +321,7 @@ class HoarderApp extends connect(store)(LitElement) {
 
     onAfterEnter(location: any, commands: any, router: any) {
         console.log("OnAfterEnter", location, commands, router);
-        this._installSyncEvents();
-    }
-
-    _installSyncEvents() {
-        const appContainer = document.getElementsByTagName("hoarder-app")[0];
-        appContainer.addEventListener("sync-error", () => {
-            console.log("sync error");
-            this._heartbeat();
-            this.showSyncButton = true;
-        });
-        appContainer.addEventListener("sync-changed", () => {
-            console.log("sync changed");
-            this._heartbeat();
-        });
-    }
-
-    _heartbeat() {
-        const headline = document.getElementById("animate");
-        headline.classList.remove("creepy");
-        void headline.offsetWidth;
-        headline.classList.add("creepy");
+        // this._installSyncEvents();
     }
 
     _sync() {

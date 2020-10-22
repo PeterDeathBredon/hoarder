@@ -13,11 +13,11 @@ export function registerRoutes(appContainer) {
         {path: '/attachmentsfor/:id', component: 'attachment-view'},
         {path: '(.*)', component: 'no-route'}
     ]).then(() => {
-        console.log("rerouting...")
-        if (developMode) {
-            setTimeout(() => {
-                Router.go("/attachmentsfor/1602674359304-wu7l7v13SsQs2syy9ZzD1");
-            }, 100);
-        }
+        // console.log("rerouting...")
+        // if (developMode) {
+        //     setTimeout(() => {
+        //         Router.go("/attachmentsfor/1602674359304-wu7l7v13SsQs2syy9ZzD1");
+        //     }, 100);
+        // }
     });
 }

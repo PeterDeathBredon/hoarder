@@ -72,10 +72,16 @@ export async function init_db() {
     }
 }
 
-export function sync(remoteCouch: string, syncDataChanged: any, syncError: any) {
-    return db.sync(remoteCouch, {live: true})
+export function sync(remoteCouch: string, syncDataChanged: any, syncError: any,
+                     syncComplete: any=null, syncActive: any=null) {
+    if (!syncComplete) syncComplete = () => {};
+    if (!syncActive) syncActive = () => {};
+    return db.sync(remoteCouch, {live: false})
         .on('change', syncDataChanged)
-        .on('error', syncError);
+        .on('error', syncError)
+        .on('complete', syncComplete)
+        .on('active', syncActive);
+
 }
 
 
