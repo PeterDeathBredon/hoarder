@@ -74,9 +74,13 @@ export async function init_db() {
 
 export function sync(remoteCouch: string, syncDataChanged: any, syncError: any,
                      syncComplete: any=null, syncActive: any=null) {
-    if (!syncComplete) syncComplete = () => {};
+    let live = false;
+    if (!syncComplete) {
+        syncComplete = () => {};
+        live = true;
+    }
     if (!syncActive) syncActive = () => {};
-    return db.sync(remoteCouch, {live: false})
+    return db.sync(remoteCouch, {"live": live})
         .on('change', syncDataChanged)
         .on('error', syncError)
         .on('complete', syncComplete)

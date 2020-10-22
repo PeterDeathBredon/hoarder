@@ -127,8 +127,13 @@ class HoarderApp extends connect(store)(LitElement) {
     }
 
     _sync_complete(info: {}) {
+        if (this._pouchDbSync) this._pouchDbSync.cancel();
         console.log("firing sync complete");
         this.dispatchEvent(new CustomEvent("sync-complete", {bubbles: true, composed: true, detail: info}));
+        this._pouchDbSync = sync(remoteCouch,
+            this._sync_changed.bind(this),
+            this._sync_error.bind(this)
+            );
     }
 
     _sync_active(info: {}) {
