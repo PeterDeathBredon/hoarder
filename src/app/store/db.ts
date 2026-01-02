@@ -5,7 +5,7 @@ import {protocol, secret_password, secret_username, url} from './credentials.ts'
 // @ts-ignore
 export const username = secret_username
 export const password = secret_password
-// export const url="93934ced-34cd-4218-9ca4-382e3e94cb39-bluemix.cloudantnosqldb.appdomain.cloud"
+// export const url="93934ced-34cd-4218-9ca4-382e3e94cb39-bluemix.nosqldb.appdomain.cloud"
 export const remoteCouch = `${protocol}://${username}:${password}@${url}/hoarder`;
 
 export const db = new PouchDB('hoarder');

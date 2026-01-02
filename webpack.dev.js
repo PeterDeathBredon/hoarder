@@ -16,10 +16,10 @@ module.exports = merge(baseConfig, {
         filename: "[name].js"
     },
     plugins: [
-        new webpack.NormalModuleReplacementPlugin(
-        /credentials\.ts/,
-        './dev-credentials.ts'
-        ),
+        // new webpack.NormalModuleReplacementPlugin(
+        // /credentials\.ts/,
+        // './dev-credentials.ts'
+        // ),
     ],
     module: {
         rules: [

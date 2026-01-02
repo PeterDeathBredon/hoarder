@@ -40,7 +40,7 @@ class ListView extends connect(store)(LitElement) {
     listId: string;
     location: Object;
     todosInEditState: Array<ToDo> = [];
-
+    filterValue: string = ""
     constructor() {
         super();
         this._instanceId = nanoid();
@@ -56,6 +56,7 @@ class ListView extends connect(store)(LitElement) {
             showSyncButton: {type: Boolean},
             listHeader: {type: String},
             listId: {type: String},
+            filterValue: {type: String},
             todosInEditState: {type: Array}
         }
     }
@@ -82,8 +83,9 @@ class ListView extends connect(store)(LitElement) {
         this._installSyncEvents();
     }
 
-    _init() {
-        if (!this.db_initialized) {
+    _init(force=false) {
+        this.filterValue = ""
+        if (!this.db_initialized || force) {
             db.get(this.listId)
                 .then((response: any) => {
                     this.listHeader = response.text;
@@ -147,7 +149,8 @@ class ListView extends connect(store)(LitElement) {
 
     _addTodo() {
         console.log("adding a todo.")
-        let todo = new ToDo("", false, true, this.listId);
+        let todo = new ToDo(this.filterValue, false, true, this.listId);
+        this.filterValue = ""
         this.todosInEditState = [...this.todosInEditState, todo]
     }
 
@@ -171,7 +174,6 @@ class ListView extends connect(store)(LitElement) {
         let aNewOne = false;
         const todo = <ToDo>event.detail;
         const updatedTodo = {...new ToDo(), ...todo};
-
         db.put(updatedTodo)
             .then((response: any) => {
                 if (this._isInEditState(todo)) {
@@ -179,6 +181,7 @@ class ListView extends connect(store)(LitElement) {
                     aNewOne = (todo._rev === undefined);
                 }
                 updatedTodo._rev = response.rev;
+                this.filterValue = ""
                 if (aNewOne)
                     store.dispatch(addTodo(updatedTodo))
                 else
@@ -188,6 +191,7 @@ class ListView extends connect(store)(LitElement) {
                 alert(response);
                 store.dispatch(changeTodo(updatedTodo));
             });
+
     }
 
     _removeTodo(e: CustomEvent) {
@@ -231,13 +235,20 @@ class ListView extends connect(store)(LitElement) {
         Router.go("/");
     }
 
+    onFilterChange(e: InputEvent) {
+        console.log("oninput", e)
+        this.filterValue = (e.currentTarget as HTMLInputElement).value
+    }
+
     _renderList() {
         console.log("rendering todolist", this.state.todos);
 
         const todosNotInEditState = this.state.todos.filter((todo: ToDo) => !this._isInEditState(todo))
         const todos=[...todosNotInEditState, ...this.todosInEditState]
-        const filteredTodos = todos.filter((todo: ToDo) => (this.state.showFinished && todo.finished)
-                                                        || !todo.finished).sort((a,b) => a._id.localeCompare(b._id) );
+        const filteredTodos = todos.filter((todo: ToDo) => (this.filterValue === "" && ((this.state.showFinished && todo.finished)
+                                                        || !todo.finished))
+            || (this.filterValue !== "" && todo.text.toUpperCase().indexOf(this.filterValue.toUpperCase()) > -1))
+            .sort((a,b) => a._id.localeCompare(b._id) );
 
         return html`
             <div class="list">
@@ -247,6 +258,13 @@ class ListView extends connect(store)(LitElement) {
                       <i @click="${this._back}" class="material-icons">arrow_back_ios</i><div class="list-title">${this.listHeader}</div>
                     </div>
                     <wired-divider style="top: 2em"></wired-divider>
+                </div>
+                <div>
+                    <wired-input id="filter-or-new" type="text" .value="${this.filterValue}" @input="${this.onFilterChange}"></wired-input>
+                        
+                    ${this.filterValue?html`<wired-fab id="add-button" 
+                                                       @click=${this._addTodo}><i style="color:black" class="material-icons">add_shopping_cart</i>
+                    </wired-fab>`:``}
                 </div>
                 ${(filteredTodos.length || 0) > 0
                     ? filteredTodos.map((todo: ToDo) =>
@@ -283,9 +301,11 @@ class ListView extends connect(store)(LitElement) {
                 ? html`             
                     ${this._renderList()}            
                     <div class="button-list">
+                        <!--
                         <wired-fab id="add-button" 
                             @click=${this._addTodo}><i class="material-icons">add_shopping_cart</i>
                         </wired-fab>
+                        -->
                         <wired-fab id="sync-button" 
                             @click=${this._sync} 
                             style="${this.showSyncButton 
@@ -323,7 +343,7 @@ class ListView extends connect(store)(LitElement) {
 
     _sync() {
         this.showSyncButton = false;
-        this._init();
+        this._init(true);
     }
 
 }
