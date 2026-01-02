@@ -259,7 +259,7 @@ class ListView extends connect(store)(LitElement) {
                     </div>
                     <wired-divider style="top: 2em"></wired-divider>
                 </div>
-                <div>
+                <div class="list-filter-div">
                     <wired-input id="filter-or-new" type="text" .value="${this.filterValue}" @input="${this.onFilterChange}"></wired-input>
                         
                     ${this.filterValue?html`<wired-fab id="add-button" 
